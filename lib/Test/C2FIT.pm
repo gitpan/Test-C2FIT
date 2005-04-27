@@ -4,7 +4,7 @@ package Test::C2FIT;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.01a';
 
 1;
 

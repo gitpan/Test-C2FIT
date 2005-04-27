@@ -86,3 +86,4 @@ t/all_tests.t
 t/lib/Test/C2FIT/test/AllTests.pm
 t/lib/Test/C2FIT/test/FixtureTest.pm
 t/lib/Test/C2FIT/test/ParseTest.pm
+META.yml                                 Module meta-data (added by MakeMaker)
