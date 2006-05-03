@@ -1,4 +1,4 @@
-# $Id: TimedActionFixture.pm,v 1.3 2005/04/27 15:53:47 tonyb Exp $
+# $Id: TimedActionFixture.pm,v 1.5 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -22,14 +22,22 @@ sub doTable
 	$table->parts()->parts()->last()->more($self->td("split"));
 }
 
+sub formatTime($) {
+    my ($value) = @_;
+    my @t = localtime($value);
+    my $r = sprintf("%2d:%02d:%02d",$t[2],$t[1],$t[0]);
+#    warn "SSS: $r\n";
+    return $r;
+}
+
 sub doCells
 {
 	my $self = shift;
 	my($cells) = @_;
 	my $start = $self->time();
 	$self->SUPER::doCells($cells);
-	my $split = $self->time() - $start;
-	$cells->last()->more($self->td($start));		#TBD format?
+	my $split = int(($self->time() - $start) * 1000 + 0.5) / 1000;
+	$cells->last()->more($self->td(formatTime($start)));
 	$cells->last()->more($self->td($split));		#TBD format?
 }
 

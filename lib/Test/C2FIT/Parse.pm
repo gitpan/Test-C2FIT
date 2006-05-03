@@ -1,4 +1,4 @@
-# $Id: Parse.pm,v 1.14 2005/04/27 13:16:29 tonyb Exp $
+# $Id: Parse.pm,v 1.15 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -54,19 +54,39 @@ sub _parse
 
 	my $startTag	= index($lc, "<" . $tags->[$level]);
 	my $endTag		= index($lc, ">", $startTag) + 1;
-	my $startEnd	= $self->findMatchingEndTag($lc, $endTag, $tags->[$level], $offset);
-	my $endEnd		= index($lc, ">", $startEnd) + 1;
-	my $startMore	= index($lc, "<" . $tags->[$level], $endEnd);
+	my $startEnd;
+	my $endEnd;
+	my $startMore;
+    my $isEmpty = 0;
+
+    if(substr($lc,$endTag-2,1) eq "/") {    # empty tag
+        $startEnd = $endTag;
+        $endEnd   = $endTag;
+        $isEmpty  = 1;
+    } else {
+    	$startEnd	= $self->findMatchingEndTag($lc, $endTag, $tags->[$level], $offset);
+    	$endEnd		= index($lc, ">", $startEnd) + 1;
+    }
+
+	$startMore	= index($lc, "<" . $tags->[$level], $endEnd);
+
 
 	if ($startTag < 0 or $endTag < 0 or $startEnd < 0 or $endEnd < 0)
 	{
+        # warn  "PARSE: $startTag $endTag $startEnd $endEnd\n";
 		throw Test::C2FIT::ParseException ("Can't find tag: " . $tags->[$level] . "\n", $offset);
 	}
 
+    if ($isEmpty) {
+    	$self->{'tag'}	 	= substr($text,$startTag,$endTag - $startTag -2) . ">";
+    	$self->{'body'}		= "";
+    	$self->{'end'}		= "</". $tags->[$level] .">";
+    } else {
+    	$self->{'tag'}	 	= substr($text,$startTag,$endTag - $startTag);
+    	$self->{'body'}		= substr($text,$endTag,$startEnd - $endTag);
+    	$self->{'end'}		= substr($text,$startEnd,$endEnd - $startEnd);
+    }
 	$self->{'leader'} 	= substr($text,0,$startTag);
-	$self->{'tag'}	 	= substr($text,$startTag,$endTag - $startTag);
-	$self->{'body'}		= substr($text,$endTag,$startEnd - $endTag);
-	$self->{'end'}		= substr($text,$startEnd,$endEnd - $startEnd);
 	$self->{'trailer'}	= substr($text,$endEnd);
 
 	if ($level + 1 < scalar @{$tags})
@@ -96,7 +116,7 @@ sub findMatchingEndTag
 {
 	my $self = shift;
 	my ($lc, $matchFromHere, $tag, $offset) = @_;
-	
+
 	my $fromHere = $matchFromHere;
 	my $count = 1;
 	my $startEnd = 0;
@@ -104,7 +124,7 @@ sub findMatchingEndTag
 	while ($count > 0)
 	{
 		my $embeddedTag 	= index($lc, "<$tag", $fromHere);
-		my $embeddedTagEnd	= index($lc, "</$tag", $fromHere);
+		my $embeddedTagEnd	= index($lc, "</$tag",$fromHere);
 
 		# Which one is closer?
 		throw Test::C2FIT::ParseException("Can't find tag: $tag\n", $offset)
@@ -356,6 +376,10 @@ sub condenseWhitespace
 	return $s;
 }
 
+# TBD
+sub footnote {
+    return "[!]";
+}
 1;
 
 __END__

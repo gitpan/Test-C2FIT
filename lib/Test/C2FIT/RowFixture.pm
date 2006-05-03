@@ -1,4 +1,4 @@
-# $Id: RowFixture.pm,v 1.2 2005/04/27 13:16:29 tonyb Exp $
+# $Id: RowFixture.pm,v 1.3 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -162,12 +162,12 @@ sub checkLists
 
 	if ( 0 == @$eList )
 	{
-		push @{$self->{'surplus'}}, @$eList;
+		push @{$self->{'surplus'}}, @$cList;
 		return;
 	}
 	if ( 0 == @$cList )
 	{
-		push @{$self->{'missing'}}, @$cList;
+		push @{$self->{'missing'}}, @$eList;
 		return;
 	}
 	my $row = shift @$eList;
@@ -230,7 +230,7 @@ sub buildCells
 {
 	my $self = shift;
 	my($row) = @_;
-	my $ncols = $self->{'columnBindings'};
+	my $ncols = @{$self->{'columnBindings'}};
 
 	if ( ! $row )
 	{
@@ -259,8 +259,8 @@ sub buildCells
 				$self->exception($next, $@);
 			}
 		}
-		return $root->more();
     }
+    return $root->more();
 }
 
 1;

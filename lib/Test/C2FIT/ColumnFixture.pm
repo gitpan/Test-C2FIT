@@ -1,4 +1,4 @@
-# $Id: ColumnFixture.pm,v 1.4 2005/04/27 15:53:47 tonyb Exp $
+# $Id: ColumnFixture.pm,v 1.5 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -80,20 +80,22 @@ sub check
 	my $self = shift;
 	my($cell, $adapter) = @_;
 
-	if ( ! $self->{'hasExecuted'} )
+	if ($self->{'hasExecuted'}) {
+    	$self->SUPER::check(@_);
+    } 
+    elsif ( ! $self->{'hasExecuted'} )
 	{
+  		$self->{'hasExecuted'} = 1;
 		eval
 		{
 			$self->execute();
+        	$self->SUPER::check(@_);
 		};
 		if ( $@ )
 		{
 			$self->exception($cell, $@);
 		}
-		$self->{'hasExecuted'} = 1;
 	}
-
-	$self->SUPER::check(@_);
 }
 
 sub reset

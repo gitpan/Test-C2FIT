@@ -1,4 +1,4 @@
-# $Id: Fixture.pm,v 1.14 2005/04/27 15:53:47 tonyb Exp $
+# $Id: Fixture.pm,v 1.15 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -24,7 +24,17 @@ our $label	= '#c08080';
 sub new
 {
 	my $pkg = shift;
-	return bless { counts => new Test::C2FIT::Counts(), @_ }, $pkg;
+    my $self = bless { counts => new Test::C2FIT::Counts(), @_ }, $pkg;
+
+    #
+    # TypeAdapter support in perl: the following hashes can contain a field/method name
+    # to Adapter mapping. Key is the columnName, value is a fully qualified package name
+    # of a TypeAdapter to use
+    #
+    $self->{fieldColumnTypeMap} = {}  unless exists $self->{fieldColumnTypeMap};
+    $self->{methodColumnTypeMap} = {} unless exists $self->{fieldColumnTypeMap};
+    $self->{methodSetterTypeMap} = {} unless exists $self->{methodSetterTypeMap};   # see actionFixture
+    return $self;
 }
 
 sub counts
@@ -76,8 +86,9 @@ sub doRows
 	my($rows) = @_;
 	while ( $rows )
 	{
+        my $more = $rows->more();
 		$self->doRow($rows);
-		$rows = $rows->more();
+		$rows = $more;
 	}
 }
 
@@ -179,11 +190,12 @@ sub exception
 
 	#TBD how to include a stack trace is an open issue
 
-	$cell->addToTag(' bgcolor="ffffcf"');
-	$cell->addToBody('<hr><font size=-2><pre>' .
-		$exception .
-		"</pre></font>");
-	$self->counts()->{'exceptions'} += 1;
+#	$cell->addToTag(' bgcolor="ffffcf"');
+#	$cell->addToBody('<hr><font size=-2><pre>' .
+#		$exception .
+#		"</pre></font>");
+#	$self->counts()->{'exceptions'} += 1;
+    $self->error($cell,$exception);
 }
 
 # Utilities
@@ -242,10 +254,14 @@ sub check
 	my($cell, $adapter) = @_;
 
 	my $text = $cell->text();
-	return if $text eq "";
-
-	if ( not defined($adapter) )
-	{
+    if (!defined($text) || $text eq "") {
+        try {
+            $self->info($cell,$adapter->toString($adapter->get()));
+        } otherwise {
+            my $e = shift;
+            $self->info($cell,"error");
+        }
+    } elsif ( not defined($adapter) ) {
 		$self->ignore($cell);
 	}
 	elsif ( $text eq "error" )
@@ -296,42 +312,50 @@ sub loadFixture
 	my $self = shift;
 	my $fixtureName = shift;
 
-	my $notFound = qq|The fixture "$fixtureName" was not found.\n|;
 	my $foundButNotFixture = qq|"$fixtureName" was found, but it's not a fixture.\n|;
 
-	my $fixture;
+	my $fixture = $self->_createNewInstance($fixtureName);
 
-	$fixtureName = $self->_java2PerlFixtureName($fixtureName);
-
-	try
-	{
-		require "$fixtureName.pm";
-	}
-	otherwise
-	{
-		my $e = shift;
-		throw Test::C2FIT::Exception("$notFound: $e");
-	};
-
-	try
-	{
-		$fixtureName =~ s/\//::/g;
-		$fixture = $fixtureName->new();
-		throw Test::C2FIT::Exception("not a fixture")
-			unless $fixture->isa('Test::C2FIT::Fixture');
+    throw Test::C2FIT::Exception($foundButNotFixture)
+    	unless $fixture->isa('Test::C2FIT::Fixture');
 		
-	}
-	otherwise
-	{
-		throw Test::C2FIT::Exception($foundButNotFixture);
-	};
-
-
-
-
 	return $fixture;
-
 }
+
+#
+#   creates a new Instance of a Package.
+#   - cares about java/perl notation
+#   - mangles full qualified package name for fit/fat/eg
+#
+#   - should be the only code creating instances of user specific packages
+#
+sub _createNewInstance {
+    my ($self,$name) = @_;
+
+	my $perlPackageName = $self->_java2PerlFixtureName($name);
+    my $instance;
+	my $notFound = qq|The fixture "$name" was not found.\n|;
+
+    try {
+        $instance = $perlPackageName->new();
+    } otherwise {
+    };
+    if (!ref($instance)) {
+        try {
+            eval "use $perlPackageName;";
+            $instance = $perlPackageName->new();
+        } otherwise {
+    		my $e = shift;
+	    	throw Test::C2FIT::Exception($notFound);
+        };
+    }
+
+    throw Test::C2FIT::Exception("$perlPackageName - instantiation error")  # if new does not return a ref...
+        unless ref($instance);
+
+	return $instance;
+}
+
 
 sub _java2PerlFixtureName
 {
@@ -343,9 +367,36 @@ sub _java2PerlFixtureName
 	$fixtureName =~ s/^eg\./Test\.C2FIT\.eg\./;
 	$fixtureName =~ s/^fat\./Test\.C2FIT\.fat\./;
 
-	$fixtureName =~ s/\./\//g;
+	$fixtureName =~ s/\./::/g;
 	return $fixtureName;
 }
+
+#
+#   rules for determination of the TypeAdapter to be uses for a column
+#
+#   1. suggestFieldType / suggestMethodResultType returns the 
+#      fully qualified package name of the TypeAdapter (inherits from Test::C2FIT::TypeAdapter).
+#
+#   2. (when 1. returned undef)
+#      Default behavior, i.e. Test::C2FIT::GenericAdapter for methods,
+#      Test::C2FIT::GenericArrayAdapter for array-ref-fields or
+#      Test::C2FIT::GenericAdapter for fields
+#
+
+sub suggestFieldType {                  # fields in ColumnFixture, RowFixture and setter parameter in ActionFixtures
+    my ($self,$fieldColumnName) = @_;
+    return $self->{fieldColumnTypeMap}->{$fieldColumnName};
+}
+
+sub suggestMethodResultType {           # method return values in all Fixtures
+    my ($self,$methodColumnName) = @_;
+    return $self->{methodColumnTypeMap}->{$methodColumnName};
+}
+
+sub suggestMethodParamType {            # method param - see ActionFixture and TypeAdapter
+    my ($self,$methodName) = @_;
+    return $self->{methodSetterTypeMap}->{$methodName};
+};
 
 package Test::C2FIT::Counts;
 

@@ -9,15 +9,28 @@ use base 'Test::C2FIT::ColumnFixture';
 use strict;
 
 use Error qw( :try );
-#use Test::C2FIT::Parse;
-use Test::C2FIT::Fixture;
 use Test::C2FIT::FileRunner;
+
+sub new
+{
+	my $pkg  = shift;
+	my $self = $pkg->SUPER::new(basedir => undef);
+
+    for my $adir qw(. spec) {
+        $self->{basedir} = $adir if -d "$adir" &&
+                                    -d "$adir/input" &&
+                                    -d "$adir/output";
+    }
+    die "expecting input and output directories somewhere!" unless defined($self->{basedir});
+    return $self;
+}
 
 sub Result
 {
 	my $self = shift;
-	my $inputFileName  = "spec/input/" . $self->{'Location'};
-	my $outputFileName = "spec/output/" . $self->{'Location'};
+        
+	my $inputFileName  = $self->{basedir} . "/input/" . $self->{'Location'};
+	my $outputFileName = $self->{basedir} . "/output/" . $self->{'Location'};
 	my $result;
 	try
 	{
@@ -44,7 +57,6 @@ sub Result
 		my $e = shift;
 		$result = "file not found: $e\n";
 	};
-	
 	return $result;
 }
 

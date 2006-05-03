@@ -1,4 +1,4 @@
-# $Id: GenericArrayAdapter.pm,v 1.2 2005/04/27 13:16:29 tonyb Exp $
+# $Id: GenericArrayAdapter.pm,v 1.3 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -30,6 +30,9 @@ sub toString {
 sub equals {
     my $self = shift;
     my($a, $b) = @_;
+
+    return 0 unless ref($a) eq "ARRAY";
+    return 0 unless ref($b) eq "ARRAY";
 
 #DEBUG print "ArrayArrayAdapter::equals ", ref($a), ", ", ref($b), "\n";
     return 0 if scalar @$a != scalar @$b;

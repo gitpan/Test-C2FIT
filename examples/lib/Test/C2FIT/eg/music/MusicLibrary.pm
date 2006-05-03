@@ -13,6 +13,7 @@ use strict;
 use vars qw($looking @library);
 use Test::C2FIT::eg::music::Music;
 use Test::C2FIT::eg::music::Simulator;
+use File::Basename qw(dirname basename);
 
 $looking = undef;
 @library = ();
@@ -21,6 +22,17 @@ sub load
 {
 	 my $self = shift;
 	my($name) = @_;
+
+    
+    my @dirs = qw(music eg src src/eg);
+    push(@dirs,dirname($name));
+
+    my $fn = basename($name);
+
+    for my $dir (@dirs) {
+        $name = "$dir/$fn";
+        last if -f "$name" && -r "$name";
+    }
 
 	open(MUSIC, "$name") or die "$name: $!\n";
 	my $ignore = <MUSIC>;	# ignore header line

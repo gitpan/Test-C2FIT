@@ -1,4 +1,4 @@
-# $Id: TypeAdapter.pm,v 1.2 2005/04/27 13:16:29 tonyb Exp $
+# $Id: TypeAdapter.pm,v 1.3 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -7,6 +7,9 @@
 # Modified by Tony Byrne <fit4perl@byrnehq.com>
 
 package Test::C2FIT::TypeAdapter;
+use Test::C2FIT::Exception;
+use Test::C2FIT::ScientificDouble;
+use Error qw( :try );
 
 use strict;
 
@@ -16,10 +19,7 @@ sub onMethod
 {
 	my($fixture, $name) = @_;
 
-	# n.b.: Perl5 lacks method signatures. Lacking a separate type map,
-	#  the best we can go is guess that the return type is "generic"
-
-	my $a = onType($fixture, "generic");
+	my $a = onType($fixture, _quessMethodResultType($fixture,$name));
 	$a->{'method'} = $name;
 	return $a;
 }
@@ -28,51 +28,104 @@ sub onField
 {
 	my($fixture, $name) = @_;
 
-	my $a = onType($fixture, _guessType($fixture, $name));
+	my $a = onType($fixture, _guessFieldType($fixture, $name));
 	$a->{'field'} = $name;
 	return $a;
 }
 
-sub _guessType
+#
+#   Distinction between onMethod and onSetter:
+#   - onMethod - the method result type is assigned a TypeAdapter ("name" is the method name)
+#   - onSetter - the method first (and only) parameter is assigned a TypeAdapter ("name" is the method name)
+#
+sub onSetter
 {
-	my($fixture, $name) = @_;
+    my ($fixture, $name) = @_;
 
-	# n.b., Field might not exist when we're asked to build a TypeAdapter
-	#  for accessing them. This can be addressed by adopting the convention
-	#  of populating the object at creation time, rather than lazily, at
-	#  least for those fields we're interested in.
-
-	my $object = $fixture->{$name};
-	if ( defined($object) )
-	{
-		#DEBUG print "_guessType: ", ref($object), "\n" if ref($object);
-		return "array" if ref($object) eq "ARRAY";
-	}
-	return "generic";
+    my $a = onType($fixture, _quessMethodParamType($fixture,$name));
+    $a->{'method'} = $name;
+    return $a;
 }
 
+#
+# returns a fully qualified package name of appropriate Adapter
+#
+sub _guessFieldType {
+	my($fixture, $name) = @_;
+
+    my $typeName = $fixture->suggestFieldType($name);
+
+    if (!defined($typeName)) {
+    	# n.b., Field might not exist when we're asked to build a TypeAdapter
+    	#  for accessing them. This can be addressed by adopting the convention
+    	#  of populating the object at creation time, rather than lazily, at
+    	#  least for those fields we're interested in.
+
+    	my $object = $fixture->{$name};
+    	if ( defined($object) )
+    	{
+    		#DEBUG print "_guessType: ", ref($object), "\n" if ref($object);
+    		$typeName = "Test::C2FIT::GenericArrayAdapter"   if ref($object) eq "ARRAY";
+        }
+    }
+   	$typeName = "Test::C2FIT::GenericAdapter" unless defined($typeName);
+    return $typeName;
+}
+
+sub _quessMethodResultType {
+    my($fixture,$name) = @_;
+
+    my $typeName = $fixture->suggestMethodResultType($name);
+    $typeName = "Test::C2FIT::GenericAdapter" unless defined($typeName);
+    return $typeName;
+}
+
+sub _quessMethodParamType {
+    my($fixture,$name) = @_;
+
+    my $typeName = $fixture->suggestMethodParamType($name);
+    $typeName = "Test::C2FIT::GenericAdapter" unless defined($typeName);
+    return $typeName;
+}
 
 sub onType
 {
-	my($fixture, $type) = @_;
-	my $a = adapterFor($type);
-	$a->init($fixture, $type);
+	my($fixture, $typeAdapterName) = @_;
+	my $a = _createInstance($typeAdapterName);
+	$a->init($fixture, $typeAdapterName);
 	$a->{'target'} = $fixture;
 	return $a;
 }
 
-sub adapterFor
-{
-	my $type = shift;
+sub _createInstance {
+    my $packageName = shift;
+    my $instance;
 
-	use Test::C2FIT::GenericAdapter;
-	use Test::C2FIT::GenericArrayAdapter;
+    throw Test::C2FIT::Exception("Missing Parameter in _createInstance!")
+        unless defined($packageName);
 
-	return new Test::C2FIT::GenericAdapter() if $type eq "generic";
-	return new Test::C2FIT::GenericArrayAdapter() if $type eq "array";
-	
-	die "can't yet adapt $type\n";
+    try {
+        $instance = $packageName->new();
+    } otherwise {
+    };
+    if (!ref($instance)) {
+        try {
+            eval "use $packageName;";
+            $instance = $packageName->new();
+        } otherwise {
+    		my $e = shift;
+	    	throw Test::C2FIT::Exception("Can't load $packageName: $e");
+        };
+    }
+
+    throw Test::C2FIT::Exception("$packageName - instantiation error")  # if new does not return a ref...
+        unless ref($instance);
+
+    throw Test::C2FIT::Exception("$packageName - is not a TypeAdapter!") unless $instance->isa('Test::C2FIT::TypeAdapter');
+
+	return $instance;
 }
+
 
 # Instance creation
 
@@ -149,6 +202,22 @@ sub equals
 {
 	my $self = shift;
 	my($a, $b) = @_;
+    if (!defined($a)) {
+        return !defined($b);
+    }
+    my $result;
+    if(ref($a)) {
+        #
+        #   if the instance has an equals method, use it
+        #
+        eval {
+            $result = $a->equals($b);
+            return $result;
+        };
+        #
+        #   has no equals method
+        #
+    }
 
 	# We need to be ugly to handle booleans
 	return 1 if $a eq "true" and $b == 1;
@@ -156,7 +225,9 @@ sub equals
 
 	# We need to be ugly here to handle numbers
 	if ( _isnumber($a) and _isnumber($b) ) {
-		return abs($a - $b) < 0.0000001;		#HACK
+        my $scA = Test::C2FIT::ScientificDouble->new($a);
+        my $scB = Test::C2FIT::ScientificDouble->new($b);
+		return $scA->equals($scB);
 	}
 
 	return $a eq $b;
@@ -164,17 +235,27 @@ sub equals
 
 sub _isnumber
 {
-	my $s = shift;
-	return 1 if $s =~ m/^-?\.\d+$/;
-	return 1 if $s =~ m/^-?\d+(:?\.\d+)?$/;
-	return 0;
+    local $_;
+	$_ = shift;
+    
+    return 0 unless /^-?[\.\d\e]+/i;
+    return 0 if tr/[0-9]/[0-9]/ < 1;
+    return 0 if tr/\./\./   > 1;
+    return 0 if tr/e/e/     > 1;
+    return 1;
+
+	# return 1 if $s =~ m/^-?\.\d+$/;
+	# return 1 if $s =~ m/^-?\d+(:?\.\d+)?$/;
+	# return 0;
 }
+
 
 sub toString
 {
 	my $self = shift;
 	my($o) = @_;
-	return "$o";
+    $o = "null" unless defined $o;
+	return $o;
 }
 
 sub asString

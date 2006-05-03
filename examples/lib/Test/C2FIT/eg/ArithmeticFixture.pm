@@ -33,11 +33,11 @@ sub doCell
 
 	if ( $column == 0 )
 	{
-		$self->{'x'} = 0 + $cell->text();
+		$self->{'x'} = int($cell->text());
 	}
 	elsif ( $column == 1 )
 	{
-		$self->{'y'} = 0 + $cell->text();
+		$self->{'y'} = int($cell->text());
 	}
 	elsif ( $column == 2 )
 	{
@@ -53,7 +53,7 @@ sub doCell
 	}
 	elsif ( $column == 5 )
 	{
-		$self->checkValue($cell, $self->{'x'} / $self->{'y'});
+		$self->checkValue($cell, int($self->{'x'} / $self->{'y'}));
 	}
 	else
 	{

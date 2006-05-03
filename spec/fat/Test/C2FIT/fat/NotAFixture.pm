@@ -6,6 +6,13 @@
 package Test::C2FIT::fat::NotAFixture;
 use strict;
 
+sub new {
+	my $pkg = shift;
+    $pkg = ref($pkg) if ref($pkg);
+	return bless {}, $pkg;
+}
+
+
 1;
 
 __END__

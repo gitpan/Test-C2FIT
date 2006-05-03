@@ -1,4 +1,4 @@
-# $Id: ActionFixture.pm,v 1.2 2005/04/27 13:16:29 tonyb Exp $
+# $Id: ActionFixture.pm,v 1.3 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -46,20 +46,19 @@ sub do_start
 {
 	my $self = shift;
 	my $pkg = $self->{'cells'}->more()->text();
-	#$pkg =~ s/^(\w+\.)*//;				#TBD refactor?
-	$pkg =~ s/^fit\.//;				#TBD refactor?
-	$pkg =~ s/\./\//g;
-	require "Test/C2FIT/$pkg.pm";
-	$pkg =~ s/\//::/g;
-	$actor = "Test::C2FIT::$pkg"->new();
+	$actor = $self->_createNewInstance($pkg);
 }
 
 sub do_enter
 {
 	my $self = shift;
+
+	die "no actor" unless defined($actor);
+
 	my $method = $self->method();
 	my $text = $self->{'cells'}->more()->more()->text();
-	$actor->$method($text);
+    my $typeAdapter = Test::C2FIT::TypeAdapter::onSetter($actor,$method);
+	$actor->$method($typeAdapter->parse($text));
 }
 
 sub do_press
@@ -72,10 +71,6 @@ sub do_press
 sub do_check
 {
 	my $self = shift;
-
-	#TBD figure out how to do
-	# TypeAdapter adapter = TypeAdapter.on(actor, method(0));
-	# check (cells.more.more, adapter);
 
 	die "no actor" unless defined($actor);
 	my $method = $self->method();

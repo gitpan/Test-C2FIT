@@ -1,4 +1,4 @@
-# $Id: FileRunner.pm,v 1.6 2005/04/27 14:54:16 tonyb Exp $
+# $Id: FileRunner.pm,v 1.7 2006/05/03 09:36:34 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -86,14 +86,16 @@ sub exception
 	# $self->{'fixture'}->exception($self->{'tables'}, $exception);
 
 	print $exception;
-	exit(1);
+	exit(-1);
 }
 
 sub _exit
 {
 	my($self) = @_;
 	$self->{'output'}->close();
-	exit(0);
+    my $counts = $self->{fixture}->{counts};
+    print STDERR $counts->toString(),"\n";
+	exit( $counts->{wrong} + $counts->{exceptions} );
 }
 
 1;

@@ -21,10 +21,6 @@ lib/Test/C2FIT/ActionFixture.pm
 lib/Test/C2FIT/TimedActionFixture.pm
 lib/Test/C2FIT/RowFixture.pm
 lib/Test/C2FIT.pm
-Changes
-MANIFEST
-Makefile.PL
-README
 run_tests.pl
 examples/input/AllPairs/function/cosine.html
 examples/input/AllPairs/function/sine.html
