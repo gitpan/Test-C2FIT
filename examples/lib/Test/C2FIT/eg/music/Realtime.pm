@@ -20,10 +20,11 @@ sub new {
                    @_ }, $pkg;
 }
 
-sub time
-{
-	my $self = shift;
-	return $Test::C2FIT::eg::music::Simulator::time;
+sub time {
+    my $self = shift;
+
+    # return Simulator::time();
+    return $Test::C2FIT::eg::music::Simulator::time;
 }
 
 sub do_pause {
@@ -35,22 +36,26 @@ sub do_pause {
 
 sub do_await {
     my $self = shift;
+
     $self->_system("wait", $self->{'cells'}->more());
 }
 
 sub do_fail {
     my $self = shift;
+
     $self->_system("fail", $self->{'cells'}->more());
 }
 
 sub do_enter {
     my $self = shift;
+
     $self->{'system'}->delay(0.8);
     $self->SUPER::do_enter();
 }
 
 sub do_press {
     my $self = shift;
+
     $self->{'system'}->delay(1.2);
     $self->SUPER::do_press();
 }
@@ -68,12 +73,12 @@ sub _system {
     }
 }
 
+
 1;
 
 __END__
 
 // Copyright (c) 2002 Cunningham & Cunningham, Inc.
-
 // Released under the terms of the GNU General Public License version 2 or later.
 
 package eg.music;

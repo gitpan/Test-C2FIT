@@ -1,11 +1,10 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Test-C2FIT
-version:      0.02
+version:      0.03
 version_from: lib/Test/C2FIT.pm
 installdirs:  site
 requires:
-    Error:                         0.15
     Test::Unit:                    0.24
 
 distribution_type: module

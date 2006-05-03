@@ -9,7 +9,7 @@ use Exporter();
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub file_runner {
     unshift(@INC,'.') unless grep { /^\.$/ } @INC;
@@ -26,15 +26,16 @@ sub wiki_runner {
 __END__
 =head1 Test::C2FIT
 
-Test::C2FIT - A direct Perl port of the FIT acceptance test framework.
+Test::C2FIT - A direct Perl port of Ward Cunningham's FIT 
+acceptance test framework for Java.
 
 =head1 SYNOPSIS
 
     FileRunner.pl input_containing_fit_tests.html test_results.html
 
-=head1 DESCRIPTION
     perl -MTest::C2FIT -e file_runner input_containing_fit_tests.html test_results.html
 
+=head1 DESCRIPTION
 
 Great software requires collaboration and communication. Fit is a tool for
 enhancing collaboration in software development. It's an invaluable way
@@ -45,13 +46,12 @@ Fit allows customers, testers, and programmers to learn what their
 software should do and what it does do. It automatically compares
 customers' expectations to actual results.
 
-This port of FIT has a featureset that lies somewhere between
-Java versions b021021j and v1.1 of FIT.  Dave W. Smith's original port
-was based on fit-b021021j and I've updated most of the core to match the
-1.1 version.
+This port of FIT has a featureset equivalent to v1.1 of FIT.  
+Dave W. Smith's original port was based on fit-b021021j and I've updated 
+most of the core to match the 1.1 version.
 
-This port passes the current FIT spec and also implements a subset of the
-examples, including the complex MusicExample.
+This port passes the current FIT spec and also implements a all of the
+examples.
 
 =head1 GOTCHAS AND LIMITATIONS
 
@@ -62,7 +62,6 @@ this port reflects that.
 2) Perl supports limited introspection. Because there are no method signatures,
 it isn't possible to determine method return types. If you want to use
 TypeAdapters you have to supply hints. (see examples)
-
 
 3) Some of the tests from the 'examples' directory expect Java behaviour for
 arithmetic (e.g. integer overflow).  Perl doesn't have this type of overflow

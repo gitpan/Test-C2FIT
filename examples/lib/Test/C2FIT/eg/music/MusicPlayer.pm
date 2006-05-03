@@ -56,7 +56,7 @@ sub secondsRemaining {
 }
 
 sub minutesRemaining {
-    return int((secondsRemaining() + 0.5) /  0.6) / 100;
+    return int(secondsRemaining() / 0.6 + 0.5) / 100;
 }
 
 # Events

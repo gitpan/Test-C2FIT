@@ -1,4 +1,4 @@
-# $Id: TimedActionFixture.pm,v 1.5 2006/05/03 09:36:34 tonyb Exp $
+# $Id: TimedActionFixture.pm,v 1.6 2006/05/03 17:07:30 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -36,7 +36,7 @@ sub doCells
 	my($cells) = @_;
 	my $start = $self->time();
 	$self->SUPER::doCells($cells);
-	my $split = int(($self->time() - $start) * 1000 + 0.5) / 1000;
+	my $split = $self->time() - $start;
 	$cells->last()->more($self->td(formatTime($start)));
 	$cells->last()->more($self->td($split));		#TBD format?
 }
