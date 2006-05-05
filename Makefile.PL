@@ -9,6 +9,6 @@ WriteMakefile(
 				Test::Unit => 0.24
 			}, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'lib/Test/C2FIT.pm', # retrieve abstract from module
+      (ABSTRACT       => "A direct Perl port of Ward Cunningham's FIT acceptance test framework for Java",
        AUTHOR         => 'Tony Byrne <fit4perl@byrnehq.com>') : ()),
 );

@@ -1,5 +1,12 @@
 Revision history for Perl extension Test::C2FIT.
 
+0.04  Fri May 5 2006	Tony Byrne
+	- Added an 'abstract' for search.cpan.org
+
+0.03  Tue May 2 2006	Tony Byrne
+	- Release to include missing files which had been submitted by Martin.
+
+
 0.02  Mon May 1 2006    Martin Busik <martin.busik@busik.de>
 	- simple entry point for FileRunner and WikiRunner
 		perl -MTest::C2FIT -e file_runner <input-file> <output-file>

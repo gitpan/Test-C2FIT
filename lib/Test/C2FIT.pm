@@ -9,7 +9,7 @@ use Exporter();
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub file_runner {
     unshift(@INC,'.') unless grep { /^\.$/ } @INC;
@@ -31,9 +31,9 @@ acceptance test framework for Java.
 
 =head1 SYNOPSIS
 
-    FileRunner.pl input_containing_fit_tests.html test_results.html
+	FileRunner.pl input_containing_fit_tests.html test_results.html
 
-    perl -MTest::C2FIT -e file_runner input_containing_fit_tests.html test_results.html
+	perl -MTest::C2FIT -e file_runner input_containing_fit_tests.html test_results.html
 
 =head1 DESCRIPTION
 
