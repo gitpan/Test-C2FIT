@@ -9,7 +9,7 @@ use Exporter();
 use strict;
 use warnings;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 sub file_runner {
     unshift(@INC,'.') unless grep { /^\.$/ } @INC;
