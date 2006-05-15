@@ -1,4 +1,4 @@
-# $Id: ColumnFixture.pm,v 1.6 2006/05/03 17:07:29 tonyb Exp $
+# $Id: ColumnFixture.pm,v 1.7 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -164,6 +164,61 @@ sub getTargetClass
 }
 
 1;
+
+
+=pod
+
+=head1 NAME
+
+Test::C2FIT::ColumnFixture - A ColumnFixture maps columns in the test data to fields or methods of its subclasses.
+
+=head1 SYNOPSIS
+
+Normally, you subclass ColumnFixture.
+
+	package MyColumnFixture;
+	use base 'Test::C2FIT::ColumnFixture;'
+
+	sub getX {
+	 my $self = shift;
+	 return $self->{X};
+	}
+
+=head1 DESCRIPTION
+
+Column headings with braces (e.g. getX()) or column names consisting of more words ("get name" will
+bound to methods, i.e. the data entered in your document will be checked against the result of
+the respective method. ("get name" will be mapped to "getName()")
+
+Column headings without braces consisting of one word will be bound to instance variables (=fields).
+In perl these need not to be predeclared. E.g. when column heading is "surname", then the ColumnFixture
+puts the text of the respective cell to a variable which can be used by C<$self->{surname}>.
+
+When your data is not stored as string, then you'll propably need an TypeAdapter. See more in L<Fixture>.
+
+=head1 METHODS
+
+=over 4
+
+=item B<reset()>
+
+Will be called before a row gets processed
+
+=item B<execute()>
+
+Will be called either after a row has been processed or before the first usage of a method-column in the
+row, depending upon which case occurs first.
+
+=back
+
+=head1 SEE ALSO
+
+Extensive and up-to-date documentation on FIT can be found at:
+http://fit.c2.com/
+
+
+=cut
+
 
 __END__
 

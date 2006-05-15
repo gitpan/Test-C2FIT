@@ -1,4 +1,4 @@
-# $Id: ActionFixture.pm,v 1.4 2006/05/03 17:07:29 tonyb Exp $
+# $Id: ActionFixture.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -91,6 +91,24 @@ sub method
 }
 
 1;
+
+=pod
+
+=head1 NAME
+
+Test::C2FIT::ActionFixture - An action fixture interprets rows as a sequence of commands to be performed in order.
+
+=head1 SYNOPSIS
+
+Normally, you do not use this class directly, rather you use its name in your FIT-document.
+
+=head1 SEE ALSO
+
+Extensive and up-to-date documentation on FIT can be found at:
+http://fit.c2.com/
+
+
+=cut
 
 __END__
 

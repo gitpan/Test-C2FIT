@@ -1,4 +1,4 @@
-# $Id: RowFixture.pm,v 1.4 2006/05/03 17:07:30 tonyb Exp $
+# $Id: RowFixture.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -264,6 +264,55 @@ sub buildCells
 }
 
 1;
+
+
+=pod
+
+=head1 NAME
+
+Test::C2FIT::RowFixture - A RowFixture compares rows in the test data to objects 
+in the system under test. Methods are invoked on the objects and returned values 
+compared to those in the table. An algorithm matches rows with objects based on 
+one or more keys. Objects may be missing or in surplus and are so noted.
+
+=head1 SYNOPSIS
+
+Normally, you subclass RowFixture.
+
+	package MyColumnFixture;
+	use base 'Test::C2FIT::ColumnFixture;'
+
+	sub query {
+	 my $self = shift;
+	 return [ E<lt>your dataE<gt> ];
+	}
+
+=head1 DESCRIPTION
+
+query() should return an arrayref consisting of either blessed objects (fields and methods are used) or
+unbessed hashrefs (only fields are used).
+
+
+When your data is not stored as string, then you'll propably need an TypeAdapter. See more in L<Fixture>.
+
+=head1 METHODS
+
+=over 4
+
+=item B<query()>
+
+query() should return an arrayref consisting of either blessed objects (fields and methods are used) or
+unbessed hashrefs (only fields are used).
+
+=back
+
+=head1 SEE ALSO
+
+Extensive and up-to-date documentation on FIT can be found at:
+http://fit.c2.com/
+
+
+=cut
 
 __END__
 

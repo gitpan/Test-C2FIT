@@ -115,7 +115,7 @@ sub _round
 
 	my $fractionalPart = $seconds - $roundDown;
 
-warn "Seconds: $seconds, Down: $roundDown, Fract: $fractionalPart";
+    # warn "Seconds: $seconds, Down: $roundDown, Fract: $fractionalPart";
 
 	return 1;
 	return ($fractionalPart >= .5 ? $seconds + 1 : $seconds);

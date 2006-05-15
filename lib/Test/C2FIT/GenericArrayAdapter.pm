@@ -1,4 +1,4 @@
-# $Id: GenericArrayAdapter.pm,v 1.4 2006/05/03 17:07:29 tonyb Exp $
+# $Id: GenericArrayAdapter.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -43,3 +43,49 @@ sub equals {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Test::C2FIT::GenericArrayAdapter - A type adapter capable of checking equality of two array-refs.
+
+
+=head1 SYNOPSIS
+
+Typically, you instruct fit to use this TypeAdapter by following (where arrayColumn is the column heading):
+
+	package MyColumnFixture
+	use base 'Test::C2FIT::ColumnFixture';
+	use strict;
+	
+	sub new {
+	    my $pkg = shift;
+	    return $pkg->SUPER::new( fieldColumnTypeMap => { 'arrayColumn' => 'Test::C2FIT::GenericArrayAdapter' } );
+	}
+
+
+=head1 DESCRIPTION
+
+
+When your data is not stored as string, then you'll propably need an TypeAdapter. Either you 
+fill an appropriate hash while instantiating a Fixture, or you overload an appropriate method.
+
+=head1 METHODS
+
+=over 4
+
+=item B<equals($a,$b)>
+
+Checks if the contents of the two given arrays are identical.
+
+=back
+
+=head1 SEE ALSO
+
+Extensive and up-to-date documentation on FIT can be found at:
+http://fit.c2.com/
+
+
+=cut
+

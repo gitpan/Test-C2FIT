@@ -1,4 +1,4 @@
-# $Id: Parse.pm,v 1.16 2006/05/03 17:07:30 tonyb Exp $
+# $Id: Parse.pm,v 1.17 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -381,6 +381,84 @@ sub footnote {
     return "[!]";
 }
 1;
+
+
+=pod
+
+=head1 NAME
+
+Test::C2FIT::Parse - Parsing of html source, filtering out contents of arbitrary tags.
+
+=head1 SYNOPSIS
+
+Normally, you do not use Parse directly.
+
+	$parse = new Test::C2FIT::Parse($string,["table","tr","td"]);
+
+	$parse = new Test::C2FIT::Parse($string,["a"]);
+
+=head1 DESCRIPTION
+
+Parse creates a linked list of Parse-Objects, so upon parsing, the original content can be restored
+(or modified, what the fit framework is actually doing).
+
+
+=head1 METHODS
+
+=over 4
+
+=item B<last()>
+
+Returns the last parse object in the same hierarchy level (table -E<gt> table, tr -E<gt> tr etc.)
+or self, if self is the last one.
+
+=item B<leaf()>
+
+Returns the first leaf node (=lower hierarchy) or self, if self has no parts.
+
+=item B<text()>
+
+Returns the text (html markup removed) of the parse object.
+
+=item B<leader()>
+
+Return the part of the input, which came before this parse object.
+
+=item B<tag()>
+
+Returns the tag, including any attributes.
+
+=item B<body()>
+
+Returns the tag body.
+
+=item B<parts()>
+
+Returns the first Parse object of the next lower hierarchy (e.g. table -E<gt> tr, tr -E<gt> td etc.)
+
+=item B<end()>
+
+Returns the closing tag.
+
+=item B<trailer()>
+
+Returns the portion of the input, which came after this parse object.
+
+=item B<more()>
+
+Returns the next Parse object on the same hierarchy level.
+
+
+
+=back
+
+=head1 SEE ALSO
+
+Extensive and up-to-date documentation on FIT can be found at:
+http://fit.c2.com/
+
+
+=cut
 
 __END__
 

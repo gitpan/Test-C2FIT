@@ -20,20 +20,4 @@ sub parse {
     return $s;
 }
 
-#
-# need to be implemented, since we store a scalar value,
-# not a reference to an object...
-#
-
-=pod
-sub equals {
-    my ($self,$a,$b) = @_;
-    if(!defined($a)) {
-        return !defined($b);
-    }
-    warn "EQ: $a $b\n";
-    return $a eq $b;
-}
-=cut
-
 1;

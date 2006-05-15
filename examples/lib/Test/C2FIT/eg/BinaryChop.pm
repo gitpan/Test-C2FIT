@@ -59,3 +59,4 @@ sub chopFriday($$) {
     return -1;
 }
 
+1;

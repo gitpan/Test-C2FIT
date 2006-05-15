@@ -1,4 +1,4 @@
-# $Id: GenericAdapter.pm,v 1.4 2006/05/03 17:07:29 tonyb Exp $
+# $Id: GenericAdapter.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.

@@ -1,4 +1,4 @@
-# $Id: Fixture.pm,v 1.16 2006/05/03 17:07:29 tonyb Exp $
+# $Id: Fixture.pm,v 1.17 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -343,9 +343,12 @@ sub _createNewInstance {
     if (!ref($instance)) {
         try {
             eval "use $perlPackageName;";
+            warn 1, " Result of use pgkName: $@" if $@;
             $instance = $perlPackageName->new();
         } otherwise {
     		my $e = shift;
+            warn 1, " Error Instantiating a Package: $e";
+
 	    	throw Test::C2FIT::Exception($notFound);
         };
     }
@@ -453,6 +456,59 @@ sub toString
 }
 
 1;
+
+
+=pod
+
+=head1 NAME
+
+Test::C2FIT::Fixture - Base class of all fixtures. A fixture checks examples in a table (of the
+input document) by running the actual program. Typically you neither use this class directly, nor
+subclass it directly.
+
+
+=head1 SYNOPSIS
+
+
+=head1 DESCRIPTION
+
+
+When your data is not stored as string, then you'll propably need an TypeAdapter. Either you 
+fill an appropriate hash while instantiating a Fixture, or you overload an appropriate method.
+
+=head1 METHODS
+
+=over 4
+
+=item B<suggestFieldType($columnName)>
+
+Returns a fully qualified package/classname of a TypeAdapter suitable for parsing/checking of cell entries
+of the column named "$columnName".
+
+Default implementation uses a lookup in the instance's fieldColumnTypeMap hash.
+Will be used in ColumnFixture, RowFixture and setter parameter of an ActionFixture.
+
+=item B<suggestMethodResultType($methodName)>
+
+Used in all Fixtures. Returns a fully qualified package/classname of a TypeAdapter suitable for parsing
+cell entries of the column named "$methodName" and checking them to return values of the method $methodName().
+
+=item B<suggestMethodParamType($methodName)>
+
+Used in ActionFixture for setter-type methods. Returns a fully qualified 
+package/classname of a TypeAdapter suitable for parsing
+cell entries following a cell with the content of $methodName.
+
+
+=back
+
+=head1 SEE ALSO
+
+Extensive and up-to-date documentation on FIT can be found at:
+http://fit.c2.com/
+
+
+=cut
 
 __END__
 

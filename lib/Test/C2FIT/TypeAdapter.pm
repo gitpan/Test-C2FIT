@@ -1,4 +1,4 @@
-# $Id: TypeAdapter.pm,v 1.4 2006/05/03 17:07:30 tonyb Exp $
+# $Id: TypeAdapter.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -269,6 +269,45 @@ sub asString
 }
 
 1;
+
+
+=head1 NAME
+
+Test::C2FIT::TypeAdapter - Base class of all TypeAdapters.
+
+
+=head1 SYNOPSIS
+
+You typically subclass TypeAdapter. Implement at least parse(), eventually equals() and toString().
+
+
+=head1 DESCRIPTION
+
+
+When your data is not stored as string, then you'll propably need an TypeAdapter. 
+E.g.: duration, which is displayed (and entered) in the form "MMM:SS" but stored as number of seconds.
+
+=head1 METHODS
+
+=over 4
+
+=item B<parse($string)>
+
+Returns the internal representation of $string. Either this is an object instance, but it can be also a scalar
+value.
+
+
+=back
+
+=head1 SEE ALSO
+
+Extensive and up-to-date documentation on FIT can be found at:
+http://fit.c2.com/
+
+
+=cut
+
+
 
 __END__
 

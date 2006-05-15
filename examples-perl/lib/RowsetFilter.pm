@@ -44,11 +44,11 @@ sub findByManagerId {
 }
 
 sub filterByFieldname {
-    my  ($fieldname,$value) = @_;
+    my ($fieldname,$value) = @_;
 
     return (defined($value)) ?
-            sub { warn "$fieldname: ",$_[0]->{$fieldname}," $value\n"; $_[0]->{$fieldname} == $value } :
-            sub { !defined($_[0]->{$fieldname}) };
+        sub { $_[0]->{$fieldname} == $value } :
+        sub { !defined($_[0]->{$fieldname}) };
 }
 
 sub doFilter {

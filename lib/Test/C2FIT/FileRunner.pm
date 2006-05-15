@@ -1,4 +1,4 @@
-# $Id: FileRunner.pm,v 1.8 2006/05/03 17:07:29 tonyb Exp $
+# $Id: FileRunner.pm,v 1.9 2006/05/15 08:37:07 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -99,3 +99,29 @@ sub _exit
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Test::C2FIT::FileRunner - a runner class operating on (plain) html files. 
+
+=head1 SYNOPSIS
+
+	$runner = new Test::C2FIT::FileRunner();
+	$runner->run($infile,$outfile);
+
+
+=head1 DESCRIPTION
+
+Either you use this class as a starting point for your tests or your test documents refer to other test
+documents which shall be processed recursively.
+
+To run your tests, it might be even simplier to use C<FileRunner.pl> or C<perl -MTest::C2FIT -e file_runner>.
+
+=head1 SEE ALSO
+
+Extensive and up-to-date documentation on FIT can be found at:
+http://fit.c2.com/
+
+=cut
