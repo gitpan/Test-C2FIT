@@ -1,7 +1,7 @@
 bin/FileRunner.pl
 bin/WikiRunner.pl
 Changes
-examples-perl/GNUmakefile
+examples-perl/all.fscr
 examples-perl/input/filter-example.html
 examples-perl/input/parse-problem.html
 examples-perl/lib/FilteredData.pm
@@ -12,7 +12,7 @@ examples-perl/lib/RowsetFilter.pm
 examples-perl/README.TXT
 examples-perl/run_tests.bat
 examples-perl/run_tests.sh
-examples/GNUmakefile
+examples/all.fscr
 examples/input/AllCombinations.html
 examples/input/AllFiles.html
 examples/input/AllPairs.html
@@ -91,13 +91,16 @@ lib/Test/C2FIT/ScientificDoubleTypeAdapter.pm
 lib/Test/C2FIT/Summary.pm
 lib/Test/C2FIT/TimedActionFixture.pm
 lib/Test/C2FIT/TypeAdapter.pm
+lib/Test/C2FIT/TypeAdapterDocumentation.pod
 lib/Test/C2FIT/WikiRunner.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
+perltidy.conf
+perltidy_glob.BAT
 README
-ReleaseNotes
 run_tests.pl
+spec/all.fscr
 spec/fat/Test/C2FIT/fat/AnnotationFixture.pm
 spec/fat/Test/C2FIT/fat/DocumentParseFixture.pm
 spec/fat/Test/C2FIT/fat/ExampleFixture.pm
@@ -109,7 +112,6 @@ spec/fat/Test/C2FIT/fat/ReferenceFixture.pm
 spec/fat/Test/C2FIT/fat/StandardAnnotationFixture.pm
 spec/fat/Test/C2FIT/fat/TableParseFixture.pm
 spec/fat/Test/C2FIT/fat/TextToHtmlFixture.pm
-spec/GNUmakefile
 spec/input/annotation.html
 spec/input/extensions.html
 spec/input/fixtures.html
@@ -120,6 +122,12 @@ spec/output/extensions.html
 spec/output/fixtures.html
 spec/output/index.html
 spec/output/parse.html
+spec/run_tests.bat
+spec/run_tests.sh
+t/01base.t
+t/02parse.t
+t/03column_fixture.t
+t/04row_fixture.t
 t/all_tests.t
 t/lib/Test/C2FIT/test/AllTests.pm
 t/lib/Test/C2FIT/test/FixtureTest.pm

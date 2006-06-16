@@ -13,7 +13,7 @@ use strict;
 sub getTargetClass {
     my $self = shift;
 
-    return "Music"
+    return "Music";
 }
 
 sub query {
@@ -24,12 +24,12 @@ sub query {
 
 sub parse {
     my $self = shift;
-    my($string, $type) = @_;
+    my ( $string, $type ) = @_;
 
-    if ( $type eq "date" ) {			#TBD we can't do this yet
-	# return Music.dateFormat.parse($string);
+    if ( $type eq "date" ) {    #TBD we can't do this yet
+                                # return Music.dateFormat.parse($string);
     }
-    return $self->SUPER::parse($string, $type);
+    return $self->SUPER::parse( $string, $type );
 }
 
 1;

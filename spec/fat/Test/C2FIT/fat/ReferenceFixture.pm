@@ -11,53 +11,54 @@ use strict;
 use Error qw( :try );
 use Test::C2FIT::FileRunner;
 
-sub new
-{
-	my $pkg  = shift;
-	my $self = $pkg->SUPER::new(basedir => undef);
+sub new {
+    my $pkg  = shift;
+    my $self = $pkg->SUPER::new( basedir => undef );
 
     for my $adir qw(. spec) {
-        $self->{basedir} = $adir if -d "$adir" &&
-                                    -d "$adir/input" &&
-                                    -d "$adir/output";
+        $self->{basedir} = $adir
+          if -d "$adir"
+          && -d "$adir/input"
+          && -d "$adir/output";
     }
-    die "expecting input and output directories somewhere!" unless defined($self->{basedir});
+    die "expecting input and output directories somewhere!"
+      unless defined( $self->{basedir} );
     return $self;
 }
 
-sub Result
-{
-	my $self = shift;
-        
-	my $inputFileName  = $self->{basedir} . "/input/" . $self->{'Location'};
-	my $outputFileName = $self->{basedir} . "/output/" . $self->{'Location'};
-	my $result;
-	try
-	{
-		my $runner = new Test::C2FIT::FileRunner();
-		$runner->argv($inputFileName, $outputFileName);
-		$runner->process();
-		$runner->{'output'}->close();
+sub Result {
+    my $self = shift;
 
-		my $counts = $runner->{'fixture'}->counts();
-		if ($counts->{'exceptions'} == 0 and $counts->{'wrong'} == 0)
-		{
-			$result = "pass";
-		}
-		else
-		{
-			$result = "fail: " . $counts->{'right'} . " right, " . $counts->{'wrong'} 
-					. " wrong, " . $counts->{'exceptions'} . " exceptions";
+    my $inputFileName  = $self->{basedir} . "/input/" . $self->{'Location'};
+    my $outputFileName = $self->{basedir} . "/output/" . $self->{'Location'};
+    my $result;
+    try {
+        my $runner = new Test::C2FIT::FileRunner();
+        $runner->argv( $inputFileName, $outputFileName );
+        $runner->process();
+        $runner->{'output'}->close();
 
-		}
+        my $counts = $runner->{'fixture'}->counts();
+        if ( $counts->{'exceptions'} == 0 and $counts->{'wrong'} == 0 ) {
+            $result = "pass";
+        }
+        else {
+            $result = "fail: "
+              . $counts->{'right'}
+              . " right, "
+              . $counts->{'wrong'}
+              . " wrong, "
+              . $counts->{'exceptions'}
+              . " exceptions";
 
-	}
-	otherwise
-	{
-		my $e = shift;
-		$result = "file not found: $e\n";
-	};
-	return $result;
+        }
+
+      }
+      otherwise {
+        my $e = shift;
+        $result = "file not found: $e\n";
+      };
+    return $result;
 }
 
 1;

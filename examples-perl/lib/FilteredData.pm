@@ -10,7 +10,7 @@ use base qw(Test::C2FIT::RowFixture);
 #
 
 sub suggestFieldType {
-    my ($self,$name) = @_;
+    my ( $self, $name ) = @_;
 
     return 'NullFkWrapper' if $name =~ /id$/i || $name =~ /ref$/i;
     return $self->SUPER::suggestFieldType;

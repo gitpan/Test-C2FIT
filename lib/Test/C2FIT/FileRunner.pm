@@ -1,4 +1,4 @@
-# $Id: FileRunner.pm,v 1.9 2006/05/15 08:37:07 tonyb Exp $
+# $Id: FileRunner.pm,v 1.10 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -12,90 +12,91 @@ use strict;
 use IO::File;
 use Test::C2FIT::Parse;
 use Test::C2FIT::Fixture;
+use Error qw( :try );
 
-sub new
-{
-	my $pkg = shift;
-    return bless { input => undef, tables => undef, output => undef,
-		fixture => new Test::C2FIT::Fixture(), @_ }, $pkg;
+sub new {
+    my $pkg = shift;
+    return bless {
+        input   => undef,
+        tables  => undef,
+        output  => undef,
+        fixture => Test::C2FIT::Fixture->new(),
+        @_
+    }, $pkg;
 }
 
-sub run
-{
-	my $self = shift;
-	my(@argv) = @_;
-	$self->argv(@argv);
-	$self->process();
-	$self->_exit();
+sub run {
+    my $self = shift;
+    my (@argv) = @_;
+    $self->argv(@argv);
+    $self->process();
+    $self->_exit();
 }
 
-sub argv
-{
-	my $self = shift;
-	my(@argv) = @_;
+sub argv {
+    my $self = shift;
+    my (@argv) = @_;
 
-	die "usage: FileRunner.pl input-file output-file\n"
-		unless 2 == @argv;
+    die "usage: FileRunner.pl input-file output-file\n"
+      unless 2 == @argv;
 
-	$Test::C2FIT::Fixture::summary{'input file'} = $argv[0];
-	$Test::C2FIT::Fixture::summary{'output file'} = $argv[1];
-	
-	my $in = new IO::File($argv[0], "r") or die "$argv[0]: $!\n";
-	$self->{'input'} = join("", <$in>);
-	my $out = new IO::File($argv[1], "w") or die "$argv[1]: $!\n";
-	$self->{'output'} = $out;
+    $Test::C2FIT::Fixture::summary{'input file'}  = $argv[0];
+    $Test::C2FIT::Fixture::summary{'output file'} = $argv[1];
 
-	my @inputFileStat = stat($argv[0]);
-	my $inputUpdateTime = localtime($inputFileStat[9]);
-	$Test::C2FIT::Fixture::summary{'input update'} = $inputUpdateTime;
+    my $in = IO::File->new( $argv[0], "r" ) or die "$argv[0]: $!\n";
+    $self->{'input'} = join( "", <$in> );
+    my $out = IO::File->new( $argv[1], "w" ) or die "$argv[1]: $!\n";
+    $self->{'output'} = $out;
+
+    my @inputFileStat   = stat( $argv[0] );
+    my $inputUpdateTime = localtime( $inputFileStat[9] );
+    $Test::C2FIT::Fixture::summary{'input update'} = $inputUpdateTime;
 
 }
 
-sub process
-{
-	my $self = shift;
+sub process {
+    my $self = shift;
 
-	use Benchmark;
-	eval
-	{
-		if ($self->{'input'} =~ /<wiki>/)
-		{
-			$self->{'tables'} = new Test::C2FIT::Parse($self->{'input'}, ['wiki','table','tr','td']);
-			$self->{'fixture'}->doTables($self->{'tables'}->parts());
-		}
-		else
-		{
-			$self->{'tables'} = new Test::C2FIT::Parse($self->{'input'}, ['table','tr','td']);
-			$self->{'fixture'}->doTables($self->{'tables'});
-		}
-	};
-    if ( $@ )
-	{
-		$self->exception($@);
-    }
+    use Benchmark;
+    try {
+        if ( $self->{'input'} =~ /<wiki>/ ) {
+            $self->{'tables'} =
+              Test::C2FIT::Parse->new( $self->{'input'},
+                [ 'wiki', 'table', 'tr', 'td' ] );
+            $self->{'fixture'}->doTables( $self->{'tables'}->parts() );
+        }
+        else {
+            $self->{'tables'} =
+              Test::C2FIT::Parse->new( $self->{'input'},
+                [ 'table', 'tr', 'td' ] );
+            $self->{'fixture'}->doTables( $self->{'tables'} );
+        }
+      }
+      otherwise {
+        my $e = shift;
+        $self->exception($e);
+      };
 
-	$self->{'output'}->print( $self->{'tables'}->asString());
+    $self->{'output'}->print( $self->{'tables'}->asString() );
 }
 
-sub exception
-{
-	my $self = shift;
-	my($exception) = @_;
+sub exception {
+    my $self = shift;
+    my ($exception) = @_;
 
-	# $self->{'tables'} = new Parse("Unable to parse input. Input ignored.", undef);
-	# $self->{'fixture'}->exception($self->{'tables'}, $exception);
+# $self->{'tables'} = new Parse("Unable to parse input. Input ignored.", undef);
+# $self->{'fixture'}->exception($self->{'tables'}, $exception);
 
-	print $exception;
-	exit(-1);
+    print $exception;
+    exit(-1);
 }
 
-sub _exit
-{
-	my($self) = @_;
-	$self->{'output'}->close();
+sub _exit {
+    my ($self) = @_;
+    $self->{'output'}->close();
     my $counts = $self->{fixture}->{counts};
-    print STDERR $counts->toString(),"\n";
-	exit( $counts->{wrong} + $counts->{exceptions} );
+    print STDERR $counts->toString(), "\n";
+    exit( $counts->{wrong} + $counts->{exceptions} );
 }
 
 1;

@@ -6,18 +6,18 @@ use base 'Test::C2FIT::TypeAdapter';
 use Test::C2FIT::ScientificDouble;
 
 sub parse {
-    my $self = shift;
+    my $self  = shift;
     my $value = shift;
     return Test::C2FIT::ScientificDouble->new($value);
 }
 
 sub toString {
-    my ($self,$value) = @_;
+    my ( $self, $value ) = @_;
     return $value->toString;
 }
 
 sub equals {
-    my ($self,$a,$b) = @_;
+    my ( $self, $a, $b ) = @_;
     return $a->equals($b);
 }
 
@@ -46,7 +46,7 @@ Typically, you instruct fit to use this TypeAdapter by following (where aColumn 
 
 =head1 DESCRIPTION
 
-Better support for equality checking of floats than abs($a - $b) < $treshold
+Better support for equality checking of floats than abs($a - $b) < $threshold
 
 
 =head1 SEE ALSO

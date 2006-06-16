@@ -11,20 +11,23 @@ use strict;
 use vars qw($playing $paused);
 
 $playing = undef;
-$paused = 0;
+$paused  = 0;
 
 sub play {
-    my($music) = @_;
+    my ($music) = @_;
     my $seconds;
 
     if ( 0 == $paused ) {
-	$Test::C2FIT::eg::music::Music::status = "loading";
-	$seconds = ($playing && $music == $playing) ? 0.3 : 2.5;
-	$Test::C2FIT::eg::music::Simulator::nextPlayStarted = Test::C2FIT::eg::music::Simulator->schedule($seconds);
-    } else  {
-	$Test::C2FIT::eg::music::Music::status = "playing";
-	$Test::C2FIT::eg::music::Simulator::nextPlayComplete = Test::C2FIT::eg::music::Simulator->schedule($paused);
-	$paused = 0;
+        $Test::C2FIT::eg::music::Music::status = "loading";
+        $seconds = ( $playing && $music == $playing ) ? 0.3 : 2.5;
+        $Test::C2FIT::eg::music::Simulator::nextPlayStarted =
+          Test::C2FIT::eg::music::Simulator->schedule($seconds);
+    }
+    else {
+        $Test::C2FIT::eg::music::Music::status               = "playing";
+        $Test::C2FIT::eg::music::Simulator::nextPlayComplete =
+          Test::C2FIT::eg::music::Simulator->schedule($paused);
+        $paused = 0;
     }
 }
 
@@ -36,13 +39,15 @@ sub playing {
 sub pause {
     $Test::C2FIT::eg::music::Music::status = "pause";
     if ( $playing && $paused == 0 ) {
-	$paused = ($Test::C2FIT::eg::music::Simulator::nextPlayComplete - $Test::C2FIT::eg::music::Simulator::time);
-	$Test::C2FIT::eg::music::Simulator::nextPlayComplete = 0;
+        $paused =
+          ( $Test::C2FIT::eg::music::Simulator::nextPlayComplete -
+              $Test::C2FIT::eg::music::Simulator::time );
+        $Test::C2FIT::eg::music::Simulator::nextPlayComplete = 0;
     }
 }
 
 sub stop {
-    $Test::C2FIT::eg::music::Simulator::nextPlayStarted = 0;
+    $Test::C2FIT::eg::music::Simulator::nextPlayStarted  = 0;
     $Test::C2FIT::eg::music::Simulator::nextPlayComplete = 0;
     playComplete();
 }
@@ -51,12 +56,14 @@ sub stop {
 
 sub secondsRemaining {
     return $paused if $paused;
-    return ($Test::C2FIT::eg::music::Simulator::nextPlayComplete - $Test::C2FIT::eg::music::Simulator::time) if $playing;
+    return ( $Test::C2FIT::eg::music::Simulator::nextPlayComplete -
+          $Test::C2FIT::eg::music::Simulator::time )
+      if $playing;
     return 0;
 }
 
 sub minutesRemaining {
-    return int(secondsRemaining() / 0.6 + 0.5) / 100;
+    return int( secondsRemaining() / 0.6 + 0.5 ) / 100;
 }
 
 # Events
@@ -64,14 +71,14 @@ sub minutesRemaining {
 sub playStarted {
     $Test::C2FIT::eg::music::Music::status = "playing";
     $playing = Test::C2FIT::eg::music::MusicLibrary::looking();
-    $Test::C2FIT::eg::music::Simulator::nextPlayComplete = Test::C2FIT::eg::music::Simulator->schedule($playing->seconds());
+    $Test::C2FIT::eg::music::Simulator::nextPlayComplete =
+      Test::C2FIT::eg::music::Simulator->schedule( $playing->seconds() );
 }
 
 sub playComplete {
     $Test::C2FIT::eg::music::Music::status = "ready";
-    $playing = undef;
+    $playing                               = undef;
 }
-
 
 1;
 

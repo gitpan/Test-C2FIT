@@ -1,4 +1,4 @@
-# $Id: Summary.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
+# $Id: Summary.pm,v 1.6 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -16,57 +16,54 @@ use Test::C2FIT::Fixture;
 
 my $countsKey = "counts";
 
-sub doTable
-{
-	my $self = shift;
-	my($table) = @_;
-	$Test::C2FIT::Fixture::summary{$countsKey} = $self->counts()->toString();
-	my @keys = sort keys %Test::C2FIT::Fixture::summary;
-	$table->parts()->more($self->rows(@keys));
+sub doTable {
+    my $self = shift;
+    my ($table) = @_;
+    $Test::C2FIT::Fixture::summary{$countsKey} = $self->counts()->toString();
+    my @keys = sort keys %Test::C2FIT::Fixture::summary;
+    $table->parts()->more( $self->rows(@keys) );
 }
 
-sub rows
-{
-	my $self = shift;
-	my(@keys) = @_;
+sub rows {
+    my $self = shift;
+    my (@keys) = @_;
 
-	return undef if 0 == @keys;
-	my $key = shift @keys;
+    return undef if 0 == @keys;
+    my $key = shift @keys;
 
-	my $result = $self->Tr($self->Td($key, $self->Td($Test::C2FIT::Fixture::summary{$key}, undef)),
-							$self->rows(@keys));
-	$self->mark($result) if $key eq $countsKey;
-	return $result;
+    my $result = $self->Tr(
+        $self->Td(
+            $key, $self->Td( $Test::C2FIT::Fixture::summary{$key}, undef )
+        ),
+        $self->rows(@keys)
+    );
+    $self->mark($result) if $key eq $countsKey;
+    return $result;
 }
 
-sub Tr
-{
-	my($self, $parts, $more) = @_;
-	return Test::C2FIT::Parse->from("tr", undef, $parts, $more);
+sub Tr {
+    my ( $self, $parts, $more ) = @_;
+    return Test::C2FIT::Parse->from( "tr", undef, $parts, $more );
 }
 
-sub Td
-{
-	my($self, $body, $more) = @_;
-	return Test::C2FIT::Parse->from("td", $self->info($body), undef, $more);
+sub Td {
+    my ( $self, $body, $more ) = @_;
+    return Test::C2FIT::Parse->from( "td", $self->info($body), undef, $more );
 }
 
-sub mark
-{
-	my $self = shift;
-	my($cell) = @_;
+sub mark {
+    my $self = shift;
+    my ($cell) = @_;
 
-	my $official = $self->counts();
-	$self->counts(new Test::C2FIT::Counts());
-	if ( $official->{'wrong'} + $official->{'exceptions'} > 0 )
-	{
-		$self->wrong($cell);
-	}
-	else
-	{
-		$self->right($cell);
-	}
-	$self->counts($official);
+    my $official = $self->counts();
+    $self->counts( Test::C2FIT::Counts->new() );
+    if ( $official->{'wrong'} + $official->{'exceptions'} > 0 ) {
+        $self->wrong($cell);
+    }
+    else {
+        $self->right($cell);
+    }
+    $self->counts($official);
 }
 
 1;

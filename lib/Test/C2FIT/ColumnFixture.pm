@@ -1,4 +1,4 @@
-# $Id: ColumnFixture.pm,v 1.7 2006/05/15 08:37:07 tonyb Exp $
+# $Id: ColumnFixture.pm,v 1.8 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -11,160 +11,140 @@ package Test::C2FIT::ColumnFixture;
 use base 'Test::C2FIT::Fixture';
 use strict;
 use Test::C2FIT::TypeAdapter;
+use Error qw( :try );
 
-sub new
-{
-	my $pkg = shift;
-	return $pkg->SUPER::new(columnBindings => [], hasExecuted => 0, @_);
+sub new {
+    my $pkg = shift;
+    return $pkg->SUPER::new( columnBindings => [], hasExecuted => 0, @_ );
 }
 
-sub doRows
-{
-	my $self = shift;
-	my($rows) = @_;
-	$self->bind($rows->parts());
-	$self->SUPER::doRows($rows->more());
+sub doRows {
+    my $self = shift;
+    my ($rows) = @_;
+    $self->bind( $rows->parts() );
+    $self->SUPER::doRows( $rows->more() );
 }
 
-sub doRow
-{
-	my $self = shift;
-	my($row) = @_;
+sub doRow {
+    my $self = shift;
+    my ($row) = @_;
 
-	$self->{'hasExecuted'} = 0;
-	eval
-	{
-		$self->reset();
-		$self->SUPER::doRow($row);
-		$self->execute unless $self->{'hasExecuted'};
-	};
-	if ( $@ ) {
-		$self->exception($row->leaf(), $@);
-	}
+    $self->{'hasExecuted'} = 0;
+    try {
+        $self->reset();
+        $self->SUPER::doRow($row);
+        $self->execute unless $self->{'hasExecuted'};
+      }
+      otherwise {
+        my $e = shift;
+        $self->exception( $row->leaf(), $e );
+      };
 }
 
-sub doCell
-{
-	my $self = shift;
-	my($cell, $column) = @_;
+sub doCell {
+    my $self = shift;
+    my ( $cell, $column ) = @_;
 
-	my $adapter = $self->{'columnBindings'}->[$column];
-	eval
-	{
-		my $string = $cell->text();
-		if ( $string eq "" )
-		{
-	    	$self->check($cell, $adapter);
-		}
-		elsif ( not defined($adapter) )
-		{
-			$self->ignore($cell);
-		}
-		elsif ( $adapter->field() )
-		{
-			$adapter->set($adapter->parse($string));
-		}
-		elsif ( $adapter->method() )
-		{
-			$self->check($cell, $adapter);
-		}
-	};
-	if ( $@ )
-	{
-		$self->exception($cell, $@);
-	}
+    my $adapter = $self->{'columnBindings'}->[$column];
+    eval {
+        my $string = $cell->text();
+        if ( $string eq "" ) {
+            $self->check( $cell, $adapter );
+        }
+        elsif ( not defined($adapter) ) {
+            $self->ignore($cell);
+        }
+        elsif ( $adapter->field() ) {
+            $adapter->set( $adapter->parse($string) );
+        }
+        elsif ( $adapter->method() ) {
+            $self->check( $cell, $adapter );
+        }
+    };
+    if ($@) {
+        $self->exception( $cell, $@ );
+    }
 }
 
-sub check
-{
-	my $self = shift;
-	my($cell, $adapter) = @_;
+sub check {
+    my $self = shift;
+    my ( $cell, $adapter ) = @_;
 
-	if ($self->{'hasExecuted'}) {
-    	$self->SUPER::check(@_);
-    } 
-    elsif ( ! $self->{'hasExecuted'} )
-	{
-  		$self->{'hasExecuted'} = 1;
-		eval
-		{
-			$self->execute();
-        	$self->SUPER::check(@_);
-		};
-		if ( $@ )
-		{
-			$self->exception($cell, $@);
-		}
-	}
+    if ( $self->{'hasExecuted'} ) {
+        $self->SUPER::check( $cell, $adapter );
+    }
+    elsif ( !$self->{'hasExecuted'} ) {
+        $self->{'hasExecuted'} = 1;
+        try {
+            $self->execute();
+            $self->SUPER::check( $cell, $adapter );
+          }
+          otherwise {
+            my $e = shift;
+            $self->exception( $cell, $e );
+          };
+    }
 }
 
-sub reset
-{
-	my($self) = @_;
-	# about to process first cell of row
+sub reset {
+    my ($self) = @_;
+
+    # about to process first cell of row
 }
 
-sub execute
-{
-	my($self) = @_;
-	# about to process first method call of row
+sub execute {
+    my ($self) = @_;
+
+    # about to process first method call of row
 }
 
-sub bind
-{
-	my($self, $heads) = @_;
-	my $column = 0;
+sub bind {
+    my ( $self, $heads ) = @_;
+    my $column = 0;
 
-	$self->{'columnBindings'} = [];
-	while ( $heads )
-	{
-		my $name = $heads->text();
-		eval
-		{
-			if ( $name eq "" )
-			{
-				$self->{'columnBindings'}->[$column] = undef;
-	    		}
-			elsif ( $name =~ /^(.*)\(\)$/ )
-			{
-				$self->{'columnBindings'}->[$column] = $self->bindMethod($1);
-			}
-			else
-			{
-				$self->{'columnBindings'}->[$column] = $self->bindField($name);
-			}
-		};
-		if ( $@ )
-		{
-			$self->exception($heads, $@);
-		}
-		$heads = $heads->more();
-		++$column;
-	}
+    $self->{'columnBindings'} = [];
+    while ($heads) {
+        my $name = $heads->text();
+        try {
+            if ( $name eq "" ) {
+                $self->{'columnBindings'}->[$column] = undef;
+            }
+            elsif ( $name =~ /^(.*)\(\)$/ ) {
+                $self->{'columnBindings'}->[$column] =
+                  $self->bindMethod( $self->camel($1) );
+            }
+            else {
+                $self->{'columnBindings'}->[$column] =
+                  $self->bindField( $self->camel($name) );
+            }
+          }
+          otherwise {
+            my $e = shift;
+            $self->exception( $heads, $e );
+          };
+        $heads = $heads->more();
+        ++$column;
+    }
 }
 
-sub bindMethod
-{
-	my $self = shift;
-	my($name) = @_;
-	return Test::C2FIT::TypeAdapter::onMethod($self, $name);
+sub bindMethod {
+    my $self = shift;
+    my ($name) = @_;
+    return Test::C2FIT::TypeAdapter->onMethod( $self, $name );
 }
 
-sub bindField
-{
-	my $self = shift;
-	my($name) = @_;
-	return Test::C2FIT::TypeAdapter::onField($self, $name);
+sub bindField {
+    my $self = shift;
+    my ($name) = @_;
+    return Test::C2FIT::TypeAdapter->onField( $self, $name );
 }
 
-sub getTargetClass
-{
-	my $self = shift;
-	ref($self);
+sub getTargetClass {
+    my $self = shift;
+    ref($self);
 }
 
 1;
-
 
 =pod
 
@@ -186,13 +166,15 @@ Normally, you subclass ColumnFixture.
 
 =head1 DESCRIPTION
 
-Column headings with braces (e.g. getX()) or column names consisting of more words ("get name" will
-bound to methods, i.e. the data entered in your document will be checked against the result of
-the respective method. ("get name" will be mapped to "getName()")
+Column headings with braces (e.g. getX()) will get bound to methods, i.e. the data entered in your document 
+will be checked against the result of the respective method. A Column heading consisting of more words
+will be concatened to a camel-case name ("get name ()" will be mapped to "getName()")
 
-Column headings without braces consisting of one word will be bound to instance variables (=fields).
+Column headings without braces will be bound to instance variables (=fields).
 In perl these need not to be predeclared. E.g. when column heading is "surname", then the ColumnFixture
-puts the text of the respective cell to a variable which can be used by C<$self->{surname}>.
+puts the text of the respective cell to a variable which can be used by C<$self-E<gt>{surname}>.
+A Column heading consisting of more words will be concatened to a camel-case name 
+("given name" will be mapped to "givenName")
 
 When your data is not stored as string, then you'll propably need an TypeAdapter. See more in L<Fixture>.
 
@@ -218,7 +200,6 @@ http://fit.c2.com/
 
 
 =cut
-
 
 __END__
 

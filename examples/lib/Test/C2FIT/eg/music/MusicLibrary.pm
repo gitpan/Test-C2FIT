@@ -18,14 +18,12 @@ use File::Basename qw(dirname basename);
 $looking = undef;
 @library = ();
 
-sub load
-{
-	 my $self = shift;
-	my($name) = @_;
+sub load {
+    my $self = shift;
+    my ($name) = @_;
 
-    
     my @dirs = qw(music eg src src/eg);
-    push(@dirs,dirname($name));
+    push( @dirs, dirname($name) );
 
     my $fn = basename($name);
 
@@ -34,111 +32,93 @@ sub load
         last if -f "$name" && -r "$name";
     }
 
-	open(MUSIC, "$name") or die "$name: $!\n";
-	my $ignore = <MUSIC>;	# ignore header line
-	while ( <MUSIC> )
-	{
-		chomp;
-		push @library, Test::C2FIT::eg::music::Music::parse($_);
-	}
-	close(MUSIC);
+    open( MUSIC, "$name" ) or die "$name: $!\n";
+    my $ignore = <MUSIC>;    # ignore header line
+    while (<MUSIC>) {
+        chomp;
+        push @library, Test::C2FIT::eg::music::Music::parse($_);
+    }
+    close(MUSIC);
 }
 
-sub library
-{
-	return @library;
+sub library {
+    return @library;
 }
 
-sub select
-{
-	my($m) = @_;
-	$looking = $m;
+sub select {
+    my ($m) = @_;
+    $looking = $m;
 }
 
-sub search
-{
-	my($seconds) = @_;
-	$Test::C2FIT::eg::music::status = "searching";
-	$Test::C2FIT::eg::music::Simulator::nextSearchComplete = Test::C2FIT::eg::music::Simulator->schedule($seconds);
+sub search {
+    my ($seconds) = @_;
+    $Test::C2FIT::eg::music::status                        = "searching";
+    $Test::C2FIT::eg::music::Simulator::nextSearchComplete =
+      Test::C2FIT::eg::music::Simulator->schedule($seconds);
 }
 
-sub searchComplete
-{
-	$Test::C2FIT::eg::music::status = defined($Test::C2FIT::eg::music::playing) ? "playing" : "ready";
+sub searchComplete {
+    $Test::C2FIT::eg::music::status =
+      defined($Test::C2FIT::eg::music::playing) ? "playing" : "ready";
 }
 
-sub findAll
-{
-	search(3.2);
-	foreach my $music ( @library )
-	{
-		$music->{'selected'} = 1;
-	}
+sub findAll {
+    search(3.2);
+    foreach my $music (@library) {
+        $music->{'selected'} = 1;
+    }
 }
 
-sub findArtist
-{
-	my($artist) = @_;
-	search(2.3);
-	foreach my $music ( @library )
-	{
-		$music->{'selected'} = $music->{'artist'} eq $artist;
-	}
+sub findArtist {
+    my ($artist) = @_;
+    search(2.3);
+    foreach my $music (@library) {
+        $music->{'selected'} = $music->{'artist'} eq $artist;
+    }
 }
 
-sub findAlbum
-{
-	my($album) = @_;
-	search(1.1);
-	foreach my $music ( @library )
-	{
-		$music->{'selected'} = $music->{'album'} eq $album;
-	}
+sub findAlbum {
+    my ($album) = @_;
+    search(1.1);
+    foreach my $music (@library) {
+        $music->{'selected'} = $music->{'album'} eq $album;
+    }
 }
 
-sub findGenre
-{
-	my($genre) = @_;
-	search(0.2);
-	foreach my $music ( @library ) 
-	{
-		$music->{'selected'} = $music->{'genre'} eq $genre;
-	}
+sub findGenre {
+    my ($genre) = @_;
+    search(0.2);
+    foreach my $music (@library) {
+        $music->{'selected'} = $music->{'genre'} eq $genre;
+    }
 }
 
-sub findYear
-{
-	my($year) = @_;
-	search(0.8);
-	foreach my $music ( @library )
-	{
-		$music->{'selected'} = $music->{'year'} eq $year;
-	}
+sub findYear {
+    my ($year) = @_;
+    search(0.8);
+    foreach my $music (@library) {
+        $music->{'selected'} = $music->{'year'} eq $year;
+    }
 }
 
-sub displayCount
-{
-	my $count = 0;
-	foreach my $music ( @library )
-	{
-		$count += $music->{'selected'};
-	}
-	return $count;
+sub displayCount {
+    my $count = 0;
+    foreach my $music (@library) {
+        $count += $music->{'selected'};
+    }
+    return $count;
 }
 
-sub displayContents
-{
-	my @displayed = ();
-	foreach my $music ( @library )
-	{
-		push @displayed, $music if $music->{'selected'};
-	}
-	return [ @displayed ];
+sub displayContents {
+    my @displayed = ();
+    foreach my $music (@library) {
+        push @displayed, $music if $music->{'selected'};
+    }
+    return [@displayed];
 }
 
-sub looking
-{
-	return $looking;
+sub looking {
+    return $looking;
 }
 
 1;

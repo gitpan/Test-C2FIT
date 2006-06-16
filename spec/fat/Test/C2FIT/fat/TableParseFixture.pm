@@ -10,46 +10,39 @@ use strict;
 
 use Test::C2FIT::Parse;
 
-sub CellBody
-{
-	my $self = shift;
-	return $self->cell()->body();
+sub CellBody {
+    my $self = shift;
+    return $self->cell()->body();
 }
 
-sub CellTag
-{
-	my $self = shift;
-	return $self->cell()->tag();
+sub CellTag {
+    my $self = shift;
+    return $self->cell()->tag();
 }
 
-sub RowTag
-{
-	my $self = shift;
-	return $self->row()->tag();
+sub RowTag {
+    my $self = shift;
+    return $self->row()->tag();
 }
 
-sub TableTag
-{
-	my $self = shift;
-	return $self->table()->tag();
+sub TableTag {
+    my $self = shift;
+    return $self->table()->tag();
 }
 
-sub table
-{
-	my $self = shift;
-	return new Test::C2FIT::Parse($self->{'HTML'});
+sub table {
+    my $self = shift;
+    return new Test::C2FIT::Parse( $self->{'HTML'} );
 }
 
-sub row
-{
-	my $self = shift;
-	return $self->table()->at(0, $self->{'Row'} - 1);
+sub row {
+    my $self = shift;
+    return $self->table()->at( 0, $self->{'Row'} - 1 );
 }
 
-sub cell
-{
-	my $self = shift;
-	return $self->row()->at(0, $self->{'Column'} - 1);
+sub cell {
+    my $self = shift;
+    return $self->row()->at( 0, $self->{'Column'} - 1 );
 }
 
 1;

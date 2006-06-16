@@ -1,4 +1,4 @@
-# $Id: PrimitiveFixture.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
+# $Id: PrimitiveFixture.pm,v 1.6 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -12,19 +12,16 @@ use base 'Test::C2FIT::Fixture';
 use strict;
 use Test::C2FIT::TypeAdapter;
 
-sub checkValue
-{
-	my $self = shift;
-	my($cell, $value) = @_;
+sub checkValue {
+    my $self = shift;
+    my ( $cell, $value ) = @_;
 
-	if ( Test::C2FIT::TypeAdapter->equals($cell->text(), $value) )
-	{
-		$self->right($cell);
-	} 
-	else
-	{
-		$self->wrong($cell, $value);
-	}
+    if ( Test::C2FIT::TypeAdapter->equals( $cell->text(), $value ) ) {
+        $self->right($cell);
+    }
+    else {
+        $self->wrong( $cell, $value );
+    }
 }
 
 1;

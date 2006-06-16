@@ -12,66 +12,60 @@ use Error qw( :try );
 use Test::C2FIT::Parse;
 use Test::C2FIT::Fixture;
 
-sub new
-{
-	my $pkg = shift;
-	my $self = $pkg->SUPER::new(@_);
-	$self->{'OriginalHTML'} = 'Text';
-	return $self;
+sub new {
+    my $pkg  = shift;
+    my $self = $pkg->SUPER::new(@_);
+    $self->{'OriginalHTML'} = 'Text';
+    return $self;
 
 }
 
-sub Output
-{
-	my $self = shift;
-		
-	my $parse = new Test::C2FIT::Parse($self->{'OriginalHTML'}, ['td']);
-	my $testbed = new Test::C2FIT::Fixture();
-	$testbed->right($parse) if $self->{'Annotation'} eq "right";
-	$testbed->wrong($parse, $self->{'Text'}) if $self->{'Annotation'} eq "wrong";
-	$testbed->error($parse, $self->{'Text'}) if $self->{'Annotation'} eq "error";
-	$testbed->info($parse, $self->{'Text'}) if $self->{'Annotation'} eq "info";
-	$testbed->ignore($parse) if $self->{'Annotation'} eq "ignore";
+sub Output {
+    my $self = shift;
 
-	return $self->GenerateOutput($parse);
+    my $parse = new Test::C2FIT::Parse( $self->{'OriginalHTML'}, ['td'] );
+    my $testbed = new Test::C2FIT::Fixture();
+    $testbed->right($parse) if $self->{'Annotation'} eq "right";
+    $testbed->wrong( $parse, $self->{'Text'} )
+      if $self->{'Annotation'} eq "wrong";
+    $testbed->error( $parse, $self->{'Text'} )
+      if $self->{'Annotation'} eq "error";
+    $testbed->info( $parse, $self->{'Text'} )
+      if $self->{'Annotation'} eq "info";
+    $testbed->ignore($parse) if $self->{'Annotation'} eq "ignore";
+
+    return $self->GenerateOutput($parse);
 
 }
 
-sub doCell
-{
-	my $self = shift;
-	my ($cell, $column) = @_;
+sub doCell {
+    my $self = shift;
+    my ( $cell, $column ) = @_;
 
-	try
-	{
-		if ($column == 4)
-		{
-			$cell->{'body'} = $self->RenderedOutput();
-		}
-		else
-		{
-			$self->SUPER::doCell($cell, $column);
-		}
-	}
-	otherwise
-	{
-		my $e = shift;
-		$self->exception($cell, $e);
-	};
+    try {
+        if ( $column == 4 ) {
+            $cell->{'body'} = $self->RenderedOutput();
+        }
+        else {
+            $self->SUPER::doCell( $cell, $column );
+        }
+      }
+      otherwise {
+        my $e = shift;
+        $self->exception( $cell, $e );
+      };
 }
 
-sub RenderedOutput
-{
-	my $self = shift;
-	return '<table border="1"><tr>' . $self->Output() . '</tr></table>';
+sub RenderedOutput {
+    my $self = shift;
+    return '<table border="1"><tr>' . $self->Output() . '</tr></table>';
 }
 
-# code smell note: copied from DocumentParseFixture	
-sub GenerateOutput
-{
-	my $self = shift;
-	my $parse = shift;
-	return $parse->asString();
+# code smell note: copied from DocumentParseFixture
+sub GenerateOutput {
+    my $self  = shift;
+    my $parse = shift;
+    return $parse->asString();
 }
 
 1;

@@ -17,6 +17,9 @@ no_index:
     - examples-perl
     - spec
     - html
+  file:
+    - perltidy_glob.BAT
+    - perltidy.conf
 meta-spec:
   version: 1.2
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
@@ -35,20 +38,40 @@ META_EXTRA
 }
 
 sub postamble {
-   	q ( 
+
+    my $result = <<'_Q_';
 all :: ReleaseNotes
 
 # Make search.cpan.org happy but still follow GNU standards:
 # (Thanks to Graham Barr for the hint)
 ReleaseNotes: Changes
 	$(ABSPERLRUN) -MExtUtils::Command -e cat Changes >$@
-	
 
 # simple pod 2 html conversion
 my_html :
 	$(ABSPERLRUN) html/html.pl html
 
-);
+_Q_
+
+    my @paths = qw(
+		examples-perl/lib/*.pm
+		examples/lib/Test/C2FIT/eg/*.pm
+		examples/lib/Test/C2FIT/eg/net/*.pm
+		examples/lib/Test/C2FIT/eg/music/*.pm
+		spec/fat/Test/C2FIT/fat/*.pm
+    );
+    my $paths = join("\\\n\t\t",@paths);
+
+my  $TIDY = "perltidy";
+    $TIDY = "perltidy_glob" if $^O =~ /MSWin32/;
+
+    $result .= <<"_QQ_";
+# development feature: format code using Perl::Tidy
+# depending on the plattform, perfom explicit glob()
+my_tidy :
+	$TIDY -b -pro=perltidy.conf \$(TO_INST_PM) $paths
+
+_QQ_
 }
 
 1;

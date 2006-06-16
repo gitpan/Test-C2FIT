@@ -9,38 +9,34 @@ use base 'Test::C2FIT::ColumnFixture';
 use strict;
 
 use Error qw( :try );
+
 #use Test::C2FIT::Parse;
 use Test::C2FIT::Fixture;
 
-sub LoadResult
-{
-	my $self = shift;
-	$self->loadFixture();
-	return "loaded";	# we'll get an exception if it didn't load
+sub LoadResult {
+    my $self = shift;
+    $self->loadFixture();
+    return "loaded";    # we'll get an exception if it didn't load
 }
 
-sub loadFixture
-{
-	my $self = shift;
-	my $fixture = new Test::C2FIT::Fixture();
-	$fixture->loadFixture($self->{'FixtureName'});
+sub loadFixture {
+    my $self    = shift;
+    my $fixture = new Test::C2FIT::Fixture();
+    $fixture->loadFixture( $self->{'FixtureName'} );
 }
 
-sub ErrorMessage
-{
-	my $self = shift;
-	my $message;
-	try
-	{
-		$self->loadFixture();
-		$message = "(none)";
-	}
-	otherwise
-	{
-		my $e = shift;
-		$message = $e->getMessage();
-	};
-	return $message;
+sub ErrorMessage {
+    my $self = shift;
+    my $message;
+    try {
+        $self->loadFixture();
+        $message = "(none)";
+      }
+      otherwise {
+        my $e = shift;
+        $message = $e->getMessage();
+      };
+    return $message;
 }
 
 1;

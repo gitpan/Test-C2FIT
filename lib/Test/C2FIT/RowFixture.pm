@@ -1,4 +1,4 @@
-# $Id: RowFixture.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
+# $Id: RowFixture.pm,v 1.6 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -12,259 +12,229 @@ use base qw(Test::C2FIT::ColumnFixture);
 
 use strict;
 use Test::C2FIT::TypeAdapter;
+use Error qw( :try );
 
 sub new {
     my $pkg = shift;
-    return $pkg->SUPER::new(results => [], missing => [], 
-		surplus => [], @_);
+    return $pkg->SUPER::new(
+        results => [],
+        missing => [],
+        surplus => [],
+        @_
+    );
 }
 
-sub doRows
-{
-	my $self = shift;
-	my($rows) = @_;
-	eval
-	{
-		$self->bind($rows->parts());
-		$self->{'results'} = $self->query();
-		$self->match($self->rowsToArray($rows->more()), $self->{'results'}, 0);
-		my $last = $rows->last();
-		$last->more($self->buildRows($self->{'surplus'}));
-		$self->markRows($last->more(), "surplus");
-		$self->markList($self->{'missing'}, "missing");
-	};
-	if ( $@ )
-	{
-		$self->exception($rows->leaf(), $@);
-	}
+sub doRows {
+    my $self = shift;
+    my ($rows) = @_;
+    try {
+        $self->bind( $rows->parts() );
+        $self->{'results'} = $self->query();
+        $self->match( $self->rowsToArray( $rows->more() ),
+            $self->{'results'}, 0 );
+        my $last = $rows->last();
+        $last->more( $self->buildRows( $self->{'surplus'} ) );
+        $self->markRows( $last->more(), "surplus" );
+        $self->markList( $self->{'missing'}, "missing" );
+      }
+      otherwise {
+        my $e = shift;
+        $self->exception( $rows->leaf(), $e );
+      };
 }
 
-sub match
-{
-	my $self = shift;
-	my($expected, $computed, $col) = @_;
+sub match {
+    my $self = shift;
+    my ( $expected, $computed, $col ) = @_;
 
-	my $ncols = @{$self->{'columnBindings'}};
-	if ( $col >= $ncols )
-	{
-		$self->checkLists($expected, $computed);
-	}
-	elsif ( not defined($self->{'columnBindings'}->[$col]) )
-	{
-		$self->match($expected, $computed, $col + 1)
-	}
-	else
-	{
-		my $eMap = $self->eSort($expected, $col);
-		my $cMap = $self->cSort($computed, $col);
-		my $keys = $self->union(keys %$eMap, keys %$cMap);
-		foreach my $key ( @$keys )
-		{
-			my $eList = $$eMap{$key};
-			my $cList = $$cMap{$key};
-			if ( ! $eList )
-			{
-				push @{$self->{'surplus'}}, @$cList;
-		    }
-			elsif ( ! $cList )
-			{
-				push @{$self->{'missing'}}, @$eList;
-			}
-			elsif ( 1 == @$eList && 1 == @$cList )
-			{
-				$self->checkLists($eList, $cList);
-			}
-		    else
-			{
-				$self->match($eList, $cList, $col+1);
-			}
-		}
-	}
+    my $ncols = @{ $self->{'columnBindings'} };
+    if ( $col >= $ncols ) {
+        $self->checkLists( $expected, $computed );
+    }
+    elsif ( not defined( $self->{'columnBindings'}->[$col] ) ) {
+        $self->match( $expected, $computed, $col + 1 );
+    }
+    else {
+        my $eMap = $self->eSort( $expected,   $col );
+        my $cMap = $self->cSort( $computed,   $col );
+        my $keys = $self->union( keys %$eMap, keys %$cMap );
+        foreach my $key (@$keys) {
+            my $eList = $$eMap{$key};
+            my $cList = $$cMap{$key};
+            if ( !$eList ) {
+                push @{ $self->{'surplus'} }, @$cList;
+            }
+            elsif ( !$cList ) {
+                push @{ $self->{'missing'} }, @$eList;
+            }
+            elsif ( 1 == @$eList && 1 == @$cList ) {
+                $self->checkLists( $eList, $cList );
+            }
+            else {
+                $self->match( $eList, $cList, $col + 1 );
+            }
+        }
+    }
 }
 
-sub rowsToArray
-{
-	my $self = shift;
-	my($rows) = @_;
-	my @results = ();
-	while ( $rows )
-	{
-		push @results, $rows;
-		$rows = $rows->more();
-	}
-	return \@results;
+sub rowsToArray {
+    my $self    = shift;
+    my ($rows)  = @_;
+    my @results = ();
+    while ($rows) {
+        push @results, $rows;
+        $rows = $rows->more();
+    }
+    return \@results;
 }
 
-sub eSort
-{
-	my $self = shift;
-	my($list, $col) = @_;
+sub eSort {
+    my $self = shift;
+    my ( $list, $col ) = @_;
 
-	my $adapter = $self->{'columnBindings'}->[$col];
-	my %result = ();
+    my $adapter = $self->{'columnBindings'}->[$col];
+    my %result  = ();
 
-	foreach my $row ( @$list )
-	{
-		my $cell = $row->parts()->at($col);
-		eval
-		{
-			my $key = $adapter->parse($cell->text());
-			push @{$result{$key}}, $row;
-		};
-		if ( $@ )
-		{
-			$self->exception($cell, $@);
-			while ( $cell = $cell->more() )
-			{
-				$self->ignore($cell);
-	    	}
-		}
-	}
+    foreach my $row (@$list) {
+        my $cell = $row->parts()->at($col);
+        eval {
+            my $key = $adapter->parse( $cell->text() );
+            push @{ $result{$key} }, $row;
+        };
+        if ($@) {
+            $self->exception( $cell, $@ );
+            while ( $cell = $cell->more() ) {
+                $self->ignore($cell);
+            }
+        }
+    }
 
-	return \%result;
+    return \%result;
 }
 
-sub cSort
-{
-	my $self = shift;
-	my($list, $col) = @_;
+sub cSort {
+    my $self = shift;
+    my ( $list, $col ) = @_;
 
-	my $adapter = $self->{'columnBindings'}->[$col];
-	my %result = ();
-	foreach my $row ( @$list )
-	{
-		eval
-		{
-			$adapter->target($row);
-			my $key = $adapter->get();
-			push @{$result{$key}}, $row;
-		};
-		if ( $@ )
-		{
-			push @{$self->{'surplus'}}, $row;
-		}
-	}
-	return \%result;
+    my $adapter = $self->{'columnBindings'}->[$col];
+    my %result  = ();
+    foreach my $row (@$list) {
+        eval {
+            $adapter->target($row);
+            my $key = $adapter->get();
+            push @{ $result{$key} }, $row;
+        };
+        if ($@) {
+            push @{ $self->{'surplus'} }, $row;
+        }
+    }
+    return \%result;
 }
 
-sub union
-{
-	my $self = shift;
-	my %merged = ();
-	$merged{$_}++ foreach @_;
-	return [keys %merged]
+sub union {
+    my $self   = shift;
+    my %merged = ();
+    $merged{$_}++ foreach @_;
+    return [ keys %merged ];
 }
 
-sub checkLists
-{
-	my $self = shift;
-	my($eList, $cList) = @_;
+sub checkLists {
+    my $self = shift;
+    my ( $eList, $cList ) = @_;
 
-	if ( 0 == @$eList )
-	{
-		push @{$self->{'surplus'}}, @$cList;
-		return;
-	}
-	if ( 0 == @$cList )
-	{
-		push @{$self->{'missing'}}, @$eList;
-		return;
-	}
-	my $row = shift @$eList;
-	my $cell = $row->parts();
-	my $obj = shift @$cList;
-    foreach my $adapter ( @{$self->{'columnBindings'}} )
-	{
-		last if not defined($cell);
-		if ( $adapter )
-		{
-			$adapter->target($obj);
-		}
-		$self->check($cell, $adapter);
-		$cell = $cell->more();
-	}
-	$self->checkLists($eList, $cList);
+    if ( 0 == @$eList ) {
+        push @{ $self->{'surplus'} }, @$cList;
+        return;
+    }
+    if ( 0 == @$cList ) {
+        push @{ $self->{'missing'} }, @$eList;
+        return;
+    }
+    my $row  = shift @$eList;
+    my $cell = $row->parts();
+    my $obj  = shift @$cList;
+    foreach my $adapter ( @{ $self->{'columnBindings'} } ) {
+        last if not defined($cell);
+        if ($adapter) {
+            $adapter->target($obj);
+        }
+        $self->check( $cell, $adapter );
+        $cell = $cell->more();
+    }
+    $self->checkLists( $eList, $cList );
 }
 
-sub markRows
-{
-	my $self = shift;
-	my($rows, $message) = @_;
+sub markRows {
+    my $self = shift;
+    my ( $rows, $message ) = @_;
 
-	my $annotation = Test::C2FIT::Fixture->label($message);
-	while ( $rows )
-	{
-		$self->wrong($rows->parts());
-		$rows->parts()->addToBody($annotation);
-		$rows = $rows->more();
-	}
+    my $annotation = Test::C2FIT::Fixture->label($message);
+    while ($rows) {
+        $self->wrong( $rows->parts() );
+        $rows->parts()->addToBody($annotation);
+        $rows = $rows->more();
+    }
 }
 
-sub markList
-{
-	my $self = shift;
-	my($rows, $message) = @_;
-	my $annotation = Test::C2FIT::Fixture->label($message);
-	foreach my $row ( @$rows )
-	{
-		$self->wrong($row->parts());
-		$row->parts()->addToBody($annotation);
-	}
+sub markList {
+    my $self = shift;
+    my ( $rows, $message ) = @_;
+    my $annotation = Test::C2FIT::Fixture->label($message);
+    foreach my $row (@$rows) {
+        $self->wrong( $row->parts() );
+        $row->parts()->addToBody($annotation);
+    }
 }
 
-sub buildRows
-{
-	my $self = shift;
-	my($rowsref) = @_;
+sub buildRows {
+    my $self = shift;
+    my ($rowsref) = @_;
 
-	my $root = Test::C2FIT::Parse->from("", undef, undef, undef);
-	my $next = $root;
-	foreach my $row ( @$rowsref )
-	{
-		$next = $next->more(Test::C2FIT::Parse->from("tr", undef, $self->buildCells($row), undef));
-	}
-	return $root->more();
+    my $root = Test::C2FIT::Parse->from( "", undef, undef, undef );
+    my $next = $root;
+    foreach my $row (@$rowsref) {
+        $next = $next->more(
+            Test::C2FIT::Parse->from(
+                "tr", undef, $self->buildCells($row), undef
+            )
+        );
+    }
+    return $root->more();
 }
 
-sub buildCells
-{
-	my $self = shift;
-	my($row) = @_;
-	my $ncols = @{$self->{'columnBindings'}};
+sub buildCells {
+    my $self  = shift;
+    my ($row) = @_;
+    my $ncols = @{ $self->{'columnBindings'} };
 
-	if ( ! $row )
-	{
-		my $nil = Test::C2FIT::Parse->from("td", "nul", undef, undef);
-		$nil->addToTag(" colspan=$ncols");
-		return $nil;
-	}
-	my $root = Test::C2FIT::Parse->from("", undef, undef, undef);
-	my $next = $root;
-	foreach my $adapter ( @{$self->{'columnBindings'}} )
-	{
-		$next = $next->more(Test::C2FIT::Parse->from("td", "&nbsp;", undef, undef));
-		if ( ! $adapter )
-		{
-			$self->ignore($next);
-		}
-		else
-		{
-			eval
-			{
-				$adapter->target($row);
-				$self->info($next, $adapter->toString($adapter->get()));
-			};
-			if ( $@ )
-			{
-				$self->exception($next, $@);
-			}
-		}
+    if ( !$row ) {
+        my $nil = Test::C2FIT::Parse->from( "td", "nul", undef, undef );
+        $nil->addToTag(" colspan=$ncols");
+        return $nil;
+    }
+    my $root = Test::C2FIT::Parse->from( "", undef, undef, undef );
+    my $next = $root;
+    foreach my $adapter ( @{ $self->{'columnBindings'} } ) {
+        $next =
+          $next->more(
+            Test::C2FIT::Parse->from( "td", "&nbsp;", undef, undef ) );
+        if ( !$adapter ) {
+            $self->ignore($next);
+        }
+        else {
+            eval {
+                $adapter->target($row);
+                $self->info( $next, $adapter->toString( $adapter->get() ) );
+            };
+            if ($@) {
+                $self->exception( $next, $@ );
+            }
+        }
     }
     return $root->more();
 }
 
 1;
-
 
 =pod
 
@@ -284,7 +254,7 @@ Normally, you subclass RowFixture.
 
 	sub query {
 	 my $self = shift;
-	 return [ E<lt>your dataE<gt> ];
+	 return [ <your data> ];
 	}
 
 =head1 DESCRIPTION

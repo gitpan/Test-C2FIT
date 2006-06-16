@@ -11,8 +11,8 @@ use File::Basename qw(basename);
 sub expansion {
     my $self = shift;
     my $path = $self->{path};
-    my $af = new Test::C2FIT::eg::AllFiles();
-    return join(",",grep { $_ = basename($_) } $af->expand($path));
+    my $af   = new Test::C2FIT::eg::AllFiles();
+    return join( ",", grep { $_ = basename($_) } $af->expand($path) );
 }
 
 1;

@@ -10,24 +10,22 @@ use Test::C2FIT::Parse;
 
 use strict;
 
-sub Text
-{
-	my $self = shift;
+sub Text {
+    my $self = shift;
 
-	#warn ">>>$self->{'HTML'}<<<";
-
-	$self->{'HTML'} =~ s/\\u00a0/\x{00a0}/g;
-	return $self->escapeAscii(Test::C2FIT::Parse->htmlToText($self->{'HTML'}));
+    my $html = $self->{'HTML'};
+    $html =~ s/\\u00a0/\x{00a0}/g;
+    return $self->escapeAscii( Test::C2FIT::Parse->htmlToText($html) );
 }
 
-sub escapeAscii
-{
-	my $self = shift;
-	my $text = shift;
-	$text =~ s/\n/\\n/g;
-	$text =~ s/\r/\\r/g;
-	$text =~ s/\x{a0}/\\u00a0/g;
-	return $text;
+sub escapeAscii {
+    my $self = shift;
+    my $text = shift;
+    my $NBSP = "\x{00a0}";
+    $text =~ s/\n/\\n/g;
+    $text =~ s/\r/\\r/g;
+    $text =~ s/$NBSP/\\u00a0/g;
+    return $text;
 }
 
 1;

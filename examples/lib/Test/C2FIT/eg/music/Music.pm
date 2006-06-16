@@ -15,18 +15,20 @@ $status = "ready";
 sub new {
     my $pkg = shift;
 
-    return bless { title => undef,
-                   artist => undef,
-                   album => undef,
-                   genre => undef,
-                   size => undef,
-                   seconds => undef,
-                   trackNumber => undef,
-                   trackCount => undef,
-                   year => undef,
-                   date => undef,
-                   selected => 0,
-                   @_ }, $pkg;
+    return bless {
+        title       => undef,
+        artist      => undef,
+        album       => undef,
+        genre       => undef,
+        size        => undef,
+        seconds     => undef,
+        trackNumber => undef,
+        trackCount  => undef,
+        year        => undef,
+        date        => undef,
+        selected    => 0,
+        @_
+    }, $pkg;
 }
 
 sub title {
@@ -62,40 +64,38 @@ sub seconds {
 sub time {
     my $self = shift;
 
-    return int($self->{'seconds'} / 0.6 + 0.5) / 100;
+    return int( $self->{'seconds'} / 0.6 + 0.5 ) / 100;
 }
 
 sub year {
     my $self = shift;
 
-    return $self->{'year'}
+    return $self->{'year'};
 }
-
-
 
 sub toString {
     my $self = shift;
 
-    return $self->{'title'} ? $self->{'title'} : "Music"
+    return $self->{'title'} ? $self->{'title'} : "Music";
 }
 
 # Factor method
 
 sub parse {
-    my($string) = @_;
+    my ($string) = @_;
 
     my $m = new Test::C2FIT::eg::music::Music();
-    my @parts = (split("\t", $string))[0..9];
-    $m->{'title'} = $parts[0];
-    $m->{'artist'} = $parts[1];
-    $m->{'album'} = $parts[2];
-    $m->{'genre'} = $parts[3];
-    $m->{'size'} = $parts[4];
-    $m->{'seconds'} = $parts[5];
+    my @parts = ( split( "\t", $string ) )[ 0 .. 9 ];
+    $m->{'title'}       = $parts[0];
+    $m->{'artist'}      = $parts[1];
+    $m->{'album'}       = $parts[2];
+    $m->{'genre'}       = $parts[3];
+    $m->{'size'}        = $parts[4];
+    $m->{'seconds'}     = $parts[5];
     $m->{'trackNumber'} = $parts[6];
-    $m->{'trackCount'} = $parts[7];
-    $m->{'year'} = $parts[8];
-    $m->{'date'} = $parts[9];
+    $m->{'trackCount'}  = $parts[7];
+    $m->{'year'}        = $parts[8];
+    $m->{'date'}        = $parts[9];
 
     return $m;
 }

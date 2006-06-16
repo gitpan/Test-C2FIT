@@ -12,48 +12,48 @@ use Error qw( :try );
 use Test::C2FIT::Parse;
 use Test::C2FIT::Fixture;
 
-sub FixtureName
-{
-	my $self = shift;
-	my $tableParse = $self->GenerateTableParse($self->{'Table'});
-	my $result = $self->fixtureName($tableParse)->text();
-	return "(missing)" if ($result eq "");
-	return $result;
+sub FixtureName {
+    my $self       = shift;
+    my $tableParse = $self->GenerateTableParse( $self->{'Table'} );
+    my $result     = $self->fixtureName($tableParse)->text();
+    return "(missing)" if ( $result eq "" );
+    return $result;
 }
 
-sub GenerateTableParse
-{
-	my $self = shift;
-	my $table = shift;
-	my @rows = split(/\n/, $table);
-	return Test::C2FIT::Parse->from("table", undef, $self->GenerateRowParses(\@rows, 0), undef);
+sub GenerateTableParse {
+    my $self  = shift;
+    my $table = shift;
+    my @rows  = split( /\n/, $table );
+    return Test::C2FIT::Parse->from( "table", undef,
+        $self->GenerateRowParses( \@rows, 0 ), undef );
 }
 
-sub GenerateRowParses
-{
-	my $self = shift;
-	my ($rows, $rowIndex) = @_;
-	return if ($rowIndex >= scalar @$rows);
-	my @cells = split (/\]\s*\[/, $rows->[$rowIndex]);
-	if (scalar @cells > 0)
-	{
-		$cells[0] =~ s/^\[//g;
-		my $lastCell = (scalar @cells) - 1;		
-		$cells[$lastCell] =~ s/\]$//g;
-		
-	}
+sub GenerateRowParses {
+    my $self = shift;
+    my ( $rows, $rowIndex ) = @_;
+    return if ( $rowIndex >= scalar @$rows );
+    my @cells = split( /\]\s*\[/, $rows->[$rowIndex] );
+    if ( scalar @cells > 0 ) {
+        $cells[0] =~ s/^\[//g;
+        my $lastCell = ( scalar @cells ) - 1;
+        $cells[$lastCell] =~ s/\]$//g;
 
-	return Test::C2FIT::Parse->from("tr", undef, $self->GenerateCellParses(\@cells, 0), $self->GenerateRowParses($rows, $rowIndex + 1));
+    }
+
+    return Test::C2FIT::Parse->from(
+        "tr", undef,
+        $self->GenerateCellParses( \@cells, 0 ),
+        $self->GenerateRowParses( $rows, $rowIndex + 1 )
+    );
 }
 
-sub GenerateCellParses
-{
-	my $self = shift;
-	my ($cells, $cellIndex) = @_;
-	return if ($cellIndex >= scalar @$cells);
-	return Test::C2FIT::Parse->from("td", $cells->[$cellIndex], undef, $self->GenerateCellParses($cells, $cellIndex + 1));
-	
-	
+sub GenerateCellParses {
+    my $self = shift;
+    my ( $cells, $cellIndex ) = @_;
+    return if ( $cellIndex >= scalar @$cells );
+    return Test::C2FIT::Parse->from( "td", $cells->[$cellIndex], undef,
+        $self->GenerateCellParses( $cells, $cellIndex + 1 ) );
+
 }
 
 1;

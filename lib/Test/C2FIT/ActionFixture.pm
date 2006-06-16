@@ -1,4 +1,4 @@
-# $Id: ActionFixture.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
+# $Id: ActionFixture.pm,v 1.6 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -12,82 +12,76 @@ use base 'Test::C2FIT::Fixture';
 
 use strict;
 use Test::C2FIT::TypeAdapter;
+use Error qw( :try );
 
 use vars qw($actor);
 $actor = undef;
 
-sub new
-{
-	my $pkg = shift;
-	return $pkg->SUPER::new(cells => undef, empty => undef, @_);
+sub new {
+    my $pkg = shift;
+    return $pkg->SUPER::new( cells => undef, empty => undef, @_ );
 }
 
-sub doCells
-{
-	my $self = shift;
-	my($cells) = @_;
+sub doCells {
+    my $self = shift;
+    my ($cells) = @_;
 
-	$self->{'cells'} = $cells;
-	eval
-	{
-		# N.B. "do_" is prepended to avoid a method collision on "check"
-		my $method = "do_" . $cells->text();
-		$self->$method();
-	};
-	if ( $@ )
-	{
-		$self->exception($cells, $@);
-    }
+    $self->{'cells'} = $cells;
+    try {
+
+        # N.B. "do_" is prepended to avoid a method collision on "check"
+        my $method = "do_" . $cells->text();
+        $self->$method();
+      }
+      otherwise {
+        my $e = shift;
+        $self->exception( $cells, $e );
+      };
 }
 
-# Actions 
+# Actions
 
-sub do_start
-{
-	my $self = shift;
-	my $pkg = $self->{'cells'}->more()->text();
-	$actor = $self->_createNewInstance($pkg);
+sub do_start {
+    my $self = shift;
+    my $pkg  = $self->{'cells'}->more()->text();
+    $actor = $self->_createNewInstance($pkg);
 }
 
-sub do_enter
-{
-	my $self = shift;
+sub do_enter {
+    my $self = shift;
 
-	die "no actor" unless defined($actor);
+    throw Test::C2FIT::Exception("no actor") unless defined($actor);
 
-	my $method = $self->method();
-	my $text = $self->{'cells'}->more()->more()->text();
-    my $typeAdapter = Test::C2FIT::TypeAdapter::onSetter($actor,$method);
-	$actor->$method($typeAdapter->parse($text));
+    my $method      = $self->method();
+    my $text        = $self->{'cells'}->more()->more()->text();
+    my $typeAdapter = Test::C2FIT::TypeAdapter->onSetter( $actor, $method );
+    $actor->$method( $typeAdapter->parse($text) );
 }
 
-sub do_press
-{
-	my $self = shift;
-	my $method = $self->method();
-	$actor->$method();
+sub do_press {
+    my $self   = shift;
+    my $method = $self->method();
+    $actor->$method();
 }
 
-sub do_check
-{
-	my $self = shift;
+sub do_check {
+    my $self = shift;
 
-	die "no actor" unless defined($actor);
-	my $method = $self->method();
-	my $adapter = Test::C2FIT::TypeAdapter::onMethod($actor, $self->method());
-	$self->check($self->{'cells'}->more()->more(), $adapter);
+    throw Test::C2FIT::Exception("no actor") unless defined($actor);
+    my $method = $self->method();
+    my $adapter = Test::C2FIT::TypeAdapter->onMethod( $actor, $self->method() );
+    $self->check( $self->{'cells'}->more()->more(), $adapter );
 }
-
 
 # Utility
 
-sub method
-{
-	my $self = shift;
-	my $method = Test::C2FIT::Fixture::camel($self->{'cells'}->more()->text());
-	die "no actor" unless defined($actor);
-	die "no such method: $method on $actor\n" unless $actor->can($method);
-	return $method;
+sub method {
+    my $self   = shift;
+    my $method = $self->camel( $self->{'cells'}->more()->text() );
+    throw Test::C2FIT::Exception("no actor") unless defined($actor);
+    throw Test::C2FIT::Exception("no such method: $method on $actor\n")
+      unless $actor->can($method);
+    return $method;
 }
 
 1;

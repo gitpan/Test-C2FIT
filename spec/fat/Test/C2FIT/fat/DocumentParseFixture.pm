@@ -15,78 +15,70 @@ use Test::C2FIT::Parse;
 #    return bless { }, $pkg;
 #}
 
-sub Output
-{
-	my $self = shift;
-	return $self->GenerateOutput(new Test::C2FIT::Parse($self->{'HTML'}));
+sub Output {
+    my $self = shift;
+    return $self->GenerateOutput( new Test::C2FIT::Parse( $self->{'HTML'} ) );
 }
 
-sub HTML
-{
-	my $self = shift;
-	$self->{'HTML'} = shift;
+sub HTML {
+    my $self = shift;
+    $self->{'HTML'} = shift;
 }
 
-sub Structure
-{	
-	my $self = shift;
+sub Structure {
+    my $self = shift;
 
-	my $structure = $self->dumpTables(new Test::C2FIT::Parse($self->{'HTML'}));
-	return $structure;
+    my $structure =
+      $self->dumpTables( new Test::C2FIT::Parse( $self->{'HTML'} ) );
+    return $structure;
 }
 
-sub GenerateOutput
-{
-	my $self = shift;
-	my $parse = shift;
-	return $parse->asString();
+sub GenerateOutput {
+    my $self  = shift;
+    my $parse = shift;
+    return $parse->asString();
 }
 
-sub dumpTables
-{
-	my $self = shift;
-	my $table = shift;
-	my $result = '';
-	my $separator = '';
-	while ($table)
-	{
-		$result .= $separator;
-		$result .= $self->dumpRows($table->parts());
-		$separator = "\n----\n";
-		$table = $table->more();
-	}
-	return $result;
+sub dumpTables {
+    my $self      = shift;
+    my $table     = shift;
+    my $result    = '';
+    my $separator = '';
+    while ($table) {
+        $result .= $separator;
+        $result .= $self->dumpRows( $table->parts() );
+        $separator = "\n----\n";
+        $table     = $table->more();
+    }
+    return $result;
 }
 
-sub dumpRows
-{
-	my $self = shift;
-	my $row = shift;
-	my $result = '';
-	my $separator = '';
-	while ($row)
-	{
-		$result .= $separator;
-		$result .= $self->dumpCells($row->parts());
-		$separator = "\n";
-		$row = $row->more;
-	}
-	return $result;
+sub dumpRows {
+    my $self      = shift;
+    my $row       = shift;
+    my $result    = '';
+    my $separator = '';
+    while ($row) {
+        $result .= $separator;
+        $result .= $self->dumpCells( $row->parts() );
+        $separator = "\n";
+        $row       = $row->more;
+    }
+    return $result;
 }
 
-sub dumpCells
-{
-	my $self = shift;
-	my $cell = shift;
-	my $result = '';
-	my $separator = '';
-	while ($cell) {
-		$result .= $separator;
-		$result .= "[" . $cell->body() . "]";
-		$separator = " ";
-		$cell = $cell->more();
-	}
-	return $result;
+sub dumpCells {
+    my $self      = shift;
+    my $cell      = shift;
+    my $result    = '';
+    my $separator = '';
+    while ($cell) {
+        $result .= $separator;
+        $result .= "[" . $cell->body() . "]";
+        $separator = " ";
+        $cell      = $cell->more();
+    }
+    return $result;
 }
 
 1;

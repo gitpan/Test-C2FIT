@@ -10,16 +10,19 @@ use base qw(Test::C2FIT::Fixture);
 use vars qw($filteredRows);
 
 sub new {
-    my $pkg = shift;
-    my $types = { findByManagerId => 'NullFkWrapper',
-                  findById => 'NullFkWrapper' };
+    my $pkg   = shift;
+    my $types = {
+        findByManagerId => 'NullFkWrapper',
+        findById        => 'NullFkWrapper'
+    };
 
     $filteredRows = [] unless defined($filteredRows);
 
-    return $pkg->SUPER::new(@_,methodSetterTypeMap => $types);
+    return $pkg->SUPER::new( @_, methodSetterTypeMap => $types );
 }
 
 sub clear {
+
     # no data in output
     $filteredRows = [];
 }
@@ -30,29 +33,29 @@ sub allRows {
 
 sub rowCount {
     my $self = shift;
-    return scalar(@$filteredRows)
+    return scalar(@$filteredRows);
 }
 
 sub findById {
-    my ($self,$id) = @_;
-    $self->doFilter(filterByFieldname('id',$id));
+    my ( $self, $id ) = @_;
+    $self->doFilter( filterByFieldname( 'id', $id ) );
 }
 
 sub findByManagerId {
-    my ($self,$managerId) = @_;
-    $self->doFilter(filterByFieldname('manager_id',$managerId));
+    my ( $self, $managerId ) = @_;
+    $self->doFilter( filterByFieldname( 'manager_id', $managerId ) );
 }
 
 sub filterByFieldname {
-    my ($fieldname,$value) = @_;
+    my ( $fieldname, $value ) = @_;
 
-    return (defined($value)) ?
-        sub { $_[0]->{$fieldname} == $value } :
-        sub { !defined($_[0]->{$fieldname}) };
+    return ( defined($value) )
+      ? sub { $_[0]->{$fieldname} == $value }
+      : sub { !defined( $_[0]->{$fieldname} ) };
 }
 
 sub doFilter {
-    my ($filter,$filterCode) = @_;
+    my ( $filter, $filterCode ) = @_;
 
     my @newRows = grep { $filterCode->($_) } @$NullValueTest::ourData;
     $filteredRows = \@newRows;

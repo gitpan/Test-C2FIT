@@ -1,4 +1,4 @@
-# $Id: TypeAdapter.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
+# $Id: TypeAdapter.pm,v 1.6 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -15,22 +15,21 @@ use strict;
 
 # Class methods
 
-sub onMethod
-{
-	my($fixture, $name) = @_;
+sub onMethod {
+    my ( $pkg, $fixture, $name ) = @_;
 
-	my $a = onType($fixture, _quessMethodResultType($fixture,$name));
-	$a->{'method'} = $name;
-	return $a;
+    my $a =
+      $pkg->onType( $fixture, $pkg->_guessMethodResultType( $fixture, $name ) );
+    $a->{'method'} = $name;
+    return $a;
 }
 
-sub onField
-{
-	my($fixture, $name) = @_;
+sub onField {
+    my ( $pkg, $fixture, $name ) = @_;
 
-	my $a = onType($fixture, _guessFieldType($fixture, $name));
-	$a->{'field'} = $name;
-	return $a;
+    my $a = $pkg->onType( $fixture, $pkg->_guessFieldType( $fixture, $name ) );
+    $a->{'field'} = $name;
+    return $a;
 }
 
 #
@@ -38,11 +37,11 @@ sub onField
 #   - onMethod - the method result type is assigned a TypeAdapter ("name" is the method name)
 #   - onSetter - the method first (and only) parameter is assigned a TypeAdapter ("name" is the method name)
 #
-sub onSetter
-{
-    my ($fixture, $name) = @_;
+sub onSetter {
+    my ( $pkg, $fixture, $name ) = @_;
 
-    my $a = onType($fixture, _quessMethodParamType($fixture,$name));
+    my $a =
+      $pkg->onType( $fixture, $pkg->_guessMethodParamType( $fixture, $name ) );
     $a->{'method'} = $name;
     return $a;
 }
@@ -51,225 +50,205 @@ sub onSetter
 # returns a fully qualified package name of appropriate Adapter
 #
 sub _guessFieldType {
-	my($fixture, $name) = @_;
+    my ( $pkg, $fixture, $name ) = @_;
 
     my $typeName = $fixture->suggestFieldType($name);
 
-    if (!defined($typeName)) {
-    	# n.b., Field might not exist when we're asked to build a TypeAdapter
-    	#  for accessing them. This can be addressed by adopting the convention
-    	#  of populating the object at creation time, rather than lazily, at
-    	#  least for those fields we're interested in.
+    if ( !defined($typeName) ) {
 
-    	my $object = $fixture->{$name};
-    	if ( defined($object) )
-    	{
-    		#DEBUG print "_guessType: ", ref($object), "\n" if ref($object);
-    		$typeName = "Test::C2FIT::GenericArrayAdapter"   if ref($object) eq "ARRAY";
+        # n.b., Field might not exist when we're asked to build a TypeAdapter
+        #  for accessing them. This can be addressed by adopting the convention
+        #  of populating the object at creation time, rather than lazily, at
+        #  least for those fields we're interested in.
+
+        my $object = $fixture->{$name};
+        if ( defined($object) ) {
+
+            #DEBUG print "_guessType: ", ref($object), "\n" if ref($object);
+            $typeName = "Test::C2FIT::GenericArrayAdapter"
+              if ref($object) eq "ARRAY";
         }
     }
-   	$typeName = "Test::C2FIT::GenericAdapter" unless defined($typeName);
+    $typeName = "Test::C2FIT::GenericAdapter" unless defined($typeName);
     return $typeName;
 }
 
-sub _quessMethodResultType {
-    my($fixture,$name) = @_;
+sub _guessMethodResultType {
+    my ( $pkg, $fixture, $name ) = @_;
 
     my $typeName = $fixture->suggestMethodResultType($name);
     $typeName = "Test::C2FIT::GenericAdapter" unless defined($typeName);
     return $typeName;
 }
 
-sub _quessMethodParamType {
-    my($fixture,$name) = @_;
+sub _guessMethodParamType {
+    my ( $pkg, $fixture, $name ) = @_;
 
     my $typeName = $fixture->suggestMethodParamType($name);
     $typeName = "Test::C2FIT::GenericAdapter" unless defined($typeName);
     return $typeName;
 }
 
-sub onType
-{
-	my($fixture, $typeAdapterName) = @_;
-	my $a = _createInstance($typeAdapterName);
-	$a->init($fixture, $typeAdapterName);
-	$a->{'target'} = $fixture;
-	return $a;
+sub onType {
+    my ( $pkg, $fixture, $typeAdapterName ) = @_;
+    my $a = $pkg->_createInstance($typeAdapterName);
+    $a->init( $fixture, $typeAdapterName );
+    $a->{'target'} = $fixture;
+    return $a;
 }
 
 sub _createInstance {
-    my $packageName = shift;
+    my ( $self, $packageName ) = @_;
     my $instance;
 
     throw Test::C2FIT::Exception("Missing Parameter in _createInstance!")
-        unless defined($packageName);
+      unless defined($packageName);
 
     try {
         $instance = $packageName->new();
-    } otherwise {
-    };
-    if (!ref($instance)) {
+      }
+      otherwise {};
+    if ( !ref($instance) ) {
         try {
             eval "use $packageName;";
             $instance = $packageName->new();
-        } otherwise {
-    		my $e = shift;
-	    	throw Test::C2FIT::Exception("Can't load $packageName: $e");
-        };
+          }
+          otherwise {
+            my $e = shift;
+            throw Test::C2FIT::Exception("Can't load $packageName: $e");
+          };
     }
 
-    throw Test::C2FIT::Exception("$packageName - instantiation error")  # if new does not return a ref...
-        unless ref($instance);
+    throw Test::C2FIT::Exception(
+        "$packageName - instantiation error")  # if new does not return a ref...
+      unless ref($instance);
 
-    throw Test::C2FIT::Exception("$packageName - is not a TypeAdapter!") unless $instance->isa('Test::C2FIT::TypeAdapter');
+    throw Test::C2FIT::Exception("$packageName - is not a TypeAdapter!")
+      unless $instance->isa('Test::C2FIT::TypeAdapter');
 
-	return $instance;
+    return $instance;
 }
-
 
 # Instance creation
 
-sub new
-{
-	my $pkg = shift;
-	bless { instance => undef, type => undef, @_ }, $pkg;
+sub new {
+    my $pkg = shift;
+    bless { instance => undef, type => undef, @_ }, $pkg;
 }
 
 # Instance methods
 
-sub init
-{
-	my $self = shift;
-	my($fixture, $type) = @_;
-	$self->{'fixture'} = $fixture;
-	$self->{'type'} = $type;
+sub init {
+    my $self = shift;
+    my ( $fixture, $type ) = @_;
+    $self->{'fixture'} = $fixture;
+    $self->{'type'}    = $type;
 }
 
-sub target
-{
-	my $self = shift;
-	my($target) = @_;
-	$self->{'target'} = $target;
+sub target {
+    my $self = shift;
+    my ($target) = @_;
+    $self->{'target'} = $target;
 }
 
-sub field
-{
-	my $self = shift;
-	return $self->{'field'};
+sub field {
+    my $self = shift;
+    return $self->{'field'};
 }
 
-sub method
-{
-	my $self = shift;
-	return $self->{'method'};
+sub method {
+    my $self = shift;
+    return $self->{'method'};
 }
 
-sub get
-{
-	my $self = shift;
-	return $self->{'target'}->{$self->field()} if $self->field();
-	return $self->invoke() if $self->method();
-	return undef;
+sub get {
+    my $self = shift;
+    return $self->{'target'}->{ $self->field() } if $self->field();
+    return $self->invoke()                       if $self->method();
+    return undef;
 }
 
-sub set
-{
-	my $self = shift;
-	my($value) = @_;
-	my $field = $self->{'field'};
-	die "can't set without a field\n" unless $field;
-	$self->{'target'}->{$field} = $value;
+sub set {
+    my $self    = shift;
+    my ($value) = @_;
+    my $field   = $self->{'field'};
+    throw Test::C2FIT::Exception("can't set without a field\n") unless $field;
+    $self->{'target'}->{$field} = $value;
 }
 
-sub invoke
-{
-	my $self = shift;
-	my $method = $self->{'method'};
-	die "can't invoke without method\n" unless $method;
-	$self->{'target'}->$method();
+sub invoke {
+    my $self   = shift;
+    my $method = $self->{'method'};
+    throw Test::C2FIT::Exception("can't invoke without method\n")
+      unless $method;
+    $self->{'target'}->$method();
 }
 
-sub parse
-{
-	my $self = shift;
-	my($s) = @_;
+sub parse {
+    my $self = shift;
+    my ($s) = @_;
 
-	# is this right, or do we assume that all subclasses will override?
-	return $self->{'fixture'}->parse($s);
+    # is this right, or do we assume that all subclasses will override?
+    return $self->{'fixture'}->parse($s);
 }
 
-sub equals
-{
-	my $self = shift;
-	my($a, $b) = @_;
-    if (!defined($a)) {
+sub equals {
+    my $self = shift;
+    my ( $a, $b ) = @_;
+    if ( !defined($a) ) {
         return !defined($b);
     }
-    my $result;
-    if(ref($a)) {
-        #
-        #   if the instance has an equals method, use it
-        #
-        eval {
-            $result = $a->equals($b);
-            return $result;
-        };
-        #
-        #   has no equals method
-        #
-    }
 
-	# We need to be ugly to handle booleans
-	return 1 if $a eq "true" and $b == 1;
-	return 1 if $a eq "false" and $b == 0;
+    #
+    #   if the instance has an equals method, use it
+    #
+    #  ( $] > 5.008 )
+    #  ? UNIVERSAL->can( $a, "equals" )
+    #  : UNIVERSAL::can( $a, "equals" );
 
-	# We need to be ugly here to handle numbers
-	if ( _isnumber($a) and _isnumber($b) ) {
+    my $can = UNIVERSAL::can( $a, "equals" );
+    return $a->equals($b) if ($can);
+
+    # We need to be ugly to handle booleans
+    return 1 if $a eq "true"  and $b == 1;
+    return 1 if $a eq "false" and $b == 0;
+
+    # We need to be ugly here to handle numbers
+    if ( $self->_isnumber($a) and $self->_isnumber($b) ) {
         my $scA = Test::C2FIT::ScientificDouble->new($a);
         my $scB = Test::C2FIT::ScientificDouble->new($b);
-		return $scA->equals($scB);
-	}
+        return $scA->equals($scB);
+    }
 
-	return $a eq $b;
+    return $a eq $b;
 }
 
-sub _isnumber
-{
+sub _isnumber {
     local $_;
-	$_ = shift;
-    
-    return 0 unless /^-?[\.\d\e]+/i;
-    return 0 if tr/[0-9]/[0-9]/ < 1;
-    return 0 if tr/\./\./   > 1;
-    return 0 if tr/e/e/     > 1;
+    my $self = shift;
+    $_ = shift;
+
+    return 0 unless /^-?[\.\de\/]+/i;
+
+    #    return 0 unless /[0-9]/;
+    return 0 if tr/\./\./ > 1;    # 1.0 is a number
+    return 0 if tr/e/e/ > 1;      # 0e0 is a number
+    return 0 if tr/\//\// > 1;    # 1/2 is a number
     return 1;
 
-	# return 1 if $s =~ m/^-?\.\d+$/;
-	# return 1 if $s =~ m/^-?\d+(:?\.\d+)?$/;
-	# return 0;
+    # return 1 if $s =~ m/^-?\.\d+$/;
+    # return 1 if $s =~ m/^-?\d+(:?\.\d+)?$/;
+    # return 0;
 }
 
-
-sub toString
-{
-	my $self = shift;
-	my($o) = @_;
+sub toString {
+    my $self = shift;
+    my ($o) = @_;
     $o = "null" unless defined $o;
-	return $o;
-}
-
-sub asString
-{	
-	#TBD why did I add this?
-	my $self = shift;
-	my $s = ref($self) . " ";
-	$s .= $self->{'method'} . "()" if $self->{'method'};
-	$s .= $self->{'field'} if $self->{'field'};
-	return $s;
+    return $o;
 }
 
 1;
-
 
 =head1 NAME
 
@@ -296,6 +275,9 @@ E.g.: duration, which is displayed (and entered) in the form "MMM:SS" but stored
 Returns the internal representation of $string. Either this is an object instance, but it can be also a scalar
 value.
 
+=item B<toString()>
+
+Returns the stringified representation of the internal value.
 
 =back
 
@@ -306,8 +288,6 @@ http://fit.c2.com/
 
 
 =cut
-
-
 
 __END__
 

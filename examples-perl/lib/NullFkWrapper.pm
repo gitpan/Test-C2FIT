@@ -13,7 +13,7 @@ use base 'Test::C2FIT::TypeAdapter';
 
 sub parse {
     my $self = shift;
-    my($s) = @_;
+    my ($s) = @_;
 
     return undef unless defined($s);
     return undef if $s eq "NULL";

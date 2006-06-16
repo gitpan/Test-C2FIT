@@ -10,27 +10,24 @@ use Test::C2FIT::Fixture;
 
 use strict;
 
-sub HTML
-{
-	my $self = shift;
-	$self->{'Text'} = $self->unescapeAscii($self->{'Text'});
-	return Test::C2FIT::Fixture->escape($self->{'Text'});
+sub HTML {
+    my $self = shift;
+    $self->{'Text'} = $self->unescapeAscii( $self->{'Text'} );
+    return Test::C2FIT::Fixture->escape( $self->{'Text'} );
 }
 
-sub unescapeAscii
-{
-	my $self = shift;
-	my $text = shift;
-	$text =~ s/\\n/\n/g;
-	$text =~ s/\\r/\r/g;
-	return $text;
+sub unescapeAscii {
+    my $self = shift;
+    my $text = shift;
+    $text =~ s/\\n/\n/g;
+    $text =~ s/\\r/\r/g;
+    return $text;
 }
 
-sub GenerateOutput
-{
-	my $self = shift;
-	my $parse = shift;
-	return $parse->asString();
+sub GenerateOutput {
+    my $self  = shift;
+    my $parse = shift;
+    return $parse->asString();
 }
 
 1;

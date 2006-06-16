@@ -1,5 +1,19 @@
 Revision history for Perl extension Test::C2FIT.
 
+0.07  Sun Jun 04 2006   Martin Busik <martin.busik@busik.de>
+    - all calls to subs in Test::C2FIT-Packages is now done in the
+      "method" style, e.g. pkg->subname and not pkg::subname
+      (as only this style allows usage of static methods in subclasses)
+    - all constructor calls now pkg->new instead of new pkg()
+    - error handling in all Test::C2FIT classes now consistently
+      try/catch/otherwise
+    - unicode-characters handling in the spec (esp. nbsp (&#0160;))
+      modified. Perl creates internally (at least under 5.8.8) utf8
+      byte sequences. Input files are expected to be in iso-8859-* or
+      windows-1252 so these characters may be encoded by a single byte.
+      Therefore, a bit unpretty handling was implemented
+    - new makefile-target my_tidy - formats
+    - further tests in the t directory added
 0.06  Sat May 13 2006   Martin Busik <martin.busik@busik.de>
     - Makefile.PL regarding META.yml modified
     - fit_shell, an interactive shell for easy running the tests

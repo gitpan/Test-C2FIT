@@ -1,4 +1,4 @@
-# $Id: Fixture.pm,v 1.17 2006/05/15 08:37:07 tonyb Exp $
+# $Id: Fixture.pm,v 1.18 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -13,313 +13,292 @@ use Error qw( :try );
 
 my %summary;
 
-our $yellow	= '#ffffcf';
-our $green	= '#cfffcf';
-our $red	= '#ffcfcf';
-our $gray	= '#808080';
-our $ignore	= '#efefef';
-our $info	= $gray;
-our $label	= '#c08080';
+our $yellow = '#ffffcf';
+our $green  = '#cfffcf';
+our $red    = '#ffcfcf';
+our $gray   = '#808080';
+our $ignore = '#efefef';
+our $info   = $gray;
+our $label  = '#c08080';
 
-sub new
-{
-	my $pkg = shift;
-    my $self = bless { counts => new Test::C2FIT::Counts(), @_ }, $pkg;
+sub new {
+    my $pkg  = shift;
+    my $self = bless { counts => Test::C2FIT::Counts->new(), @_ }, $pkg;
 
-    #
-    # TypeAdapter support in perl: the following hashes can contain a field/method name
-    # to Adapter mapping. Key is the columnName, value is a fully qualified package name
-    # of a TypeAdapter to use
-    #
-    $self->{fieldColumnTypeMap} = {}  unless exists $self->{fieldColumnTypeMap};
+#
+# TypeAdapter support in perl: the following hashes can contain a field/method name
+# to Adapter mapping. Key is the columnName, value is a fully qualified package name
+# of a TypeAdapter to use
+#
+    $self->{fieldColumnTypeMap}  = {} unless exists $self->{fieldColumnTypeMap};
     $self->{methodColumnTypeMap} = {} unless exists $self->{fieldColumnTypeMap};
-    $self->{methodSetterTypeMap} = {} unless exists $self->{methodSetterTypeMap};   # see actionFixture
+    $self->{methodSetterTypeMap} = {}
+      unless exists $self->{methodSetterTypeMap};    # see actionFixture
     return $self;
 }
 
-sub counts
-{
-	my $self = shift;
-	$self->{'counts'} = $_[0] if @_;
-	return $self->{'counts'};
+sub counts {
+    my $self = shift;
+    $self->{'counts'} = $_[0] if @_;
+    return $self->{'counts'};
 }
 
-sub doTables
-{
-	my $self = shift;
-	my($tables) = @_;
+sub doTables {
+    my $self = shift;
+    my ($tables) = @_;
 
-	$Test::C2FIT::Fixture::summary{'run date'} = scalar localtime(time());
-	$Test::C2FIT::Fixture::summary{'run elapsed time'} = Test::C2FIT::Runtime->new();
+    $Test::C2FIT::Fixture::summary{'run date'} = scalar localtime( time() );
+    $Test::C2FIT::Fixture::summary{'run elapsed time'} =
+      Test::C2FIT::Runtime->new();
 
-	while ( $tables )
-	{
-		my $heading = $tables->at(0,0,0);
-		if ( $heading ) {
-			try
-			{
-				my $pkg = $heading->text();
-				my $fixture = $self->loadFixture($pkg);
-				$fixture->counts($self->counts());
-				$fixture->doTable($tables);
-			}
-			otherwise
-			{
-				my $e = shift;
-				$self->exception($heading, $e);
-			};
-		}
-		$tables = $tables->more();
-	}
+    while ($tables) {
+        my $heading = $tables->at( 0, 0, 0 );
+        if ($heading) {
+            try {
+                my $pkg     = $heading->text();
+                my $fixture = $self->loadFixture($pkg);
+                $fixture->counts( $self->counts() );
+                $fixture->doTable($tables);
+              }
+              otherwise {
+                my $e = shift;
+                $self->exception( $heading, $e );
+              };
+        }
+        $tables = $tables->more();
+    }
 }
 
-sub doTable
-{
-	my $self = shift;
-	my($table) = @_;
-	$self->doRows($table->parts()->more());
+sub doTable {
+    my $self = shift;
+    my ($table) = @_;
+    $self->doRows( $table->parts()->more() );
 }
 
-sub doRows
-{
-	my $self = shift;
-	my($rows) = @_;
-	while ( $rows )
-	{
+sub doRows {
+    my $self = shift;
+    my ($rows) = @_;
+    while ($rows) {
         my $more = $rows->more();
-		$self->doRow($rows);
-		$rows = $more;
-	}
+        $self->doRow($rows);
+        $rows = $more;
+    }
 }
 
-sub doRow
-{
-	my $self = shift;
-	my($row) = @_;
-	$self->doCells($row->parts());
+sub doRow {
+    my $self = shift;
+    my ($row) = @_;
+    $self->doCells( $row->parts() );
 }
 
-sub doCells
-{
-	my $self = shift;
-	my($cells) = @_;
-	my $columnNumber = 0;
-	
-	while ( $cells )
-	{
-		try
-		{
-			$self->doCell($cells, $columnNumber);
-		}
-		otherwise
-		{
-			my $e = shift;
-			$self->exception($cells, $e);
-		};
-		$cells = $cells->more();
-		++$columnNumber;
-	}
+sub doCells {
+    my $self         = shift;
+    my ($cells)      = @_;
+    my $columnNumber = 0;
+
+    while ($cells) {
+        try {
+            $self->doCell( $cells, $columnNumber );
+          }
+          otherwise {
+            my $e = shift;
+            $self->exception( $cells, $e );
+          };
+        $cells = $cells->more();
+        ++$columnNumber;
+    }
 }
 
-sub doCell
-{
- 	my $self = shift;
-	my($cell, $columnNumber) = @_;
-	$self->ignore($cell);
+sub doCell {
+    my $self = shift;
+    my ( $cell, $columnNumber ) = @_;
+    $self->ignore($cell);
 }
 
 # Annotations
 
-sub right
-{
-	my $self = shift;
-	my($cell) = @_;
-	$cell->addToTag(qq| bgcolor="$green"|);
-	$self->counts()->{'right'} += 1;
+sub right {
+    my $self = shift;
+    my ($cell) = @_;
+    $cell->addToTag(qq| bgcolor="$green"|);
+    $self->counts()->{'right'} += 1;
 }
 
-sub wrong
-{
-	my $self = shift;
-	my ($cell, $actual) = @_;
-	$cell->addToTag(qq| bgcolor="$red"|);
-	$cell->{'body'} = $self->escape($cell->text());	
-	$cell->addToBody($self->label("expected") . "<hr>" . $self->escape($actual) . $self->label("actual"))
-		if defined($actual);
-	$self->counts()->{'wrong'} += 1;	
+sub wrong {
+    my $self = shift;
+    my ( $cell, $actual ) = @_;
+    $cell->addToTag(qq| bgcolor="$red"|);
+    $cell->{'body'} = $self->escape( $cell->text() );
+    $cell->addToBody( $self->label("expected") . "<hr>"
+          . $self->escape($actual)
+          . $self->label("actual") )
+      if defined($actual);
+    $self->counts()->{'wrong'} += 1;
 }
 
-sub ignore
-{
-	my $self = shift;
-	my($cell) = @_;
-	$cell->addToTag(qq| bgcolor="$ignore"|);
-	$self->counts()->{'ignores'} += 1;
+sub ignore {
+    my $self = shift;
+    my ($cell) = @_;
+    $cell->addToTag(qq| bgcolor="$ignore"|);
+    $self->counts()->{'ignores'} += 1;
 }
 
-sub error
-{
-	my $self = shift;
-	my ($cell,$message) = @_;
-	$cell->{'body'} = $self->escape($cell->text());
-	$cell->addToBody("<hr><pre>" . $self->escape($message) . "</pre>");
-	$cell->addToTag(' bgcolor="' . $yellow . '"');
-	$self->counts()->{'exceptions'}++;
+sub error {
+    my $self = shift;
+    my ( $cell, $message ) = @_;
+    $cell->{'body'} = $self->escape( $cell->text() );
+    $cell->addToBody( "<hr><pre>" . $self->escape($message) . "</pre>" );
+    $cell->addToTag( ' bgcolor="' . $yellow . '"' );
+    $self->counts()->{'exceptions'}++;
 }
 
-sub info
-{
-	my $self = shift;
-	my ($cell, $message);
-	if (scalar @_ == 2)
-	{
-		($cell, $message) = @_;
-		$cell->addToBody($self->info($message));
-	}
-	else
-	{
-		$message = shift;
-		return qq| <font color="$info">| . $self->escape($message) . qq|</font>|;
-	}
+sub info {
+    my $self = shift;
+    my ( $cell, $message );
+    if ( scalar @_ == 2 ) {
+        ( $cell, $message ) = @_;
+        $cell->addToBody( $self->info($message) );
+    }
+    else {
+        $message = shift;
+        return qq| <font color="$info">|
+          . $self->escape($message)
+          . qq|</font>|;
+    }
 }
 
-sub exception
-{
-	my $self = shift;
-	my($cell, $exception) = @_;
+sub exception {
+    my $self = shift;
+    my ( $cell, $exception ) = @_;
 
-	#TBD how to include a stack trace is an open issue
+    #TBD include a stack trace: (impl. should be the same as under java)
+    #
+    # perl does not support this directly. One solution might be using own
+    # $SIG{'__DIE__'} handler. Unfortunately, this may confuse other error
+    # handling routines - those from the Error-module or those from
+    # the "system under test"
+    #
 
-#	$cell->addToTag(' bgcolor="ffffcf"');
-#	$cell->addToBody('<hr><font size=-2><pre>' .
-#		$exception .
-#		"</pre></font>");
-#	$self->counts()->{'exceptions'} += 1;
-    $self->error($cell,$exception);
+    #	$cell->addToTag(' bgcolor="ffffcf"');
+    #	$cell->addToBody('<hr><font size=-2><pre>' .
+    #		$exception .
+    #		"</pre></font>");
+    #	$self->counts()->{'exceptions'} += 1;
+    $self->error( $cell, $exception );
 }
 
 # Utilities
 
-sub label
-{
-	my $self = shift;
-	my($string) = @_;
-	return '' unless $string;
-	return qq| <font size=-1 color="$label"><i>$string</i></font>|;
+sub label {
+    my $self = shift;
+    my ($string) = @_;
+    return '' unless $string;
+    return qq| <font size=-1 color="$label"><i>$string</i></font>|;
 }
 
-sub gray
-{
-	my $self = shift;
-	my($string) = @_;
-	return '' unless $string;
-	return qq|<font color="$gray">$string</font>|;
+sub gray {
+    my $self = shift;
+    my ($string) = @_;
+    return '' unless $string;
+    return qq|<font color="$gray">$string</font>|;
 }
 
-sub escape
-{
-	my $self = shift;
-	my($string) = @_;
+sub escape {
+    my $self = shift;
+    my ($string) = @_;
 
-	return $string unless $string;
+    return $string unless $string;
 
-	$string =~ s/\&/&amp;/g;
-	$string =~ s/</&lt;/g;
-	
-	$string =~ s/  / &nbsp;/g;
-	$string =~ s|\r\n|<br />|g;
-	$string =~ s|\r|<br \/>|g;
-	$string =~ s|\n|<br \/>|g;
-	return $string;
+    $string =~ s/\&/&amp;/g;
+    $string =~ s/</&lt;/g;
+
+    $string =~ s/  / &nbsp;/g;
+    $string =~ s|\r\n|<br />|g;
+    $string =~ s|\r|<br \/>|g;
+    $string =~ s|\n|<br \/>|g;
+    return $string;
 }
 
-sub camel
-{
-	my($string) = @_;
-	$string =~ s/\s(\S)/uc($1)/eg;
-	return $string;
+sub camel {
+    my ( $pkg, $string ) = @_;
+    $string =~ s/\s+$//s;
+    $string =~ s/\s(\S)/uc($1)/eg;
+    return $string;
 }
 
-sub parse
-{
-	my $self = shift;
-	my($string, $type) = @_;
-	die "can't yet parse $type\n" if $type ne "generic";
-	return $string;
+sub parse {
+    my $self = shift;
+    my ( $string, $type ) = @_;
+    throw Test::C2FIT::Exception("can't yet parse $type\n")
+      if $type ne "generic";
+    return $string;
 }
 
-sub check
-{
-	my $self = shift;
-	my($cell, $adapter) = @_;
+sub check {
+    my $self = shift;
+    my ( $cell, $adapter ) = @_;
 
-	my $text = $cell->text();
-    if (!defined($text) || $text eq "") {
+    my $text = $cell->text();
+    if ( !defined($text) || $text eq "" ) {
         try {
-            $self->info($cell,$adapter->toString($adapter->get()));
-        } otherwise {
+            $self->info( $cell, $adapter->toString( $adapter->get() ) );
+          }
+          otherwise {
             my $e = shift;
-            $self->info($cell,"error");
-        }
-    } elsif ( not defined($adapter) ) {
-		$self->ignore($cell);
-	}
-	elsif ( $text eq "error" )
-	{
-		try
-		{
-			my $result = $adapter->invoke();
-			$self->wrong($cell, $adapter->toString($result));
-		}
-		otherwise
-		{
-			#TBD The Java source distinguishes between illegal access
-			# and "normal" exceptions. 
-			$self->right($cell);
-		};
-	}
-	else
-	{
-		try
-		{
-			my $result = $adapter->get();
-			if ( $adapter->equals($adapter->parse($text), $result) )
-			{
-				$self->right($cell);
-			}
-			else
-			{
-				$self->wrong($cell, $adapter->toString($result));
-			}
-		}
-		otherwise
-		{
-			my $e = shift;
-			$self->exception($cell, $e);
-		};
-	}
+            $self->info( $cell, "error" );
+          };
+    }
+    elsif ( not defined($adapter) ) {
+        $self->ignore($cell);
+    }
+    elsif ( $text eq "error" ) {
+        try {
+            my $result = $adapter->invoke();
+            $self->wrong( $cell, $adapter->toString($result) );
+          }
+          otherwise {
+
+            #TBD The Java source distinguishes between illegal access
+            # and "normal" exceptions.
+            $self->right($cell);
+          };
+    }
+    else {
+        try {
+            my $result = $adapter->get();
+            if ( $adapter->equals( $adapter->parse($text), $result ) ) {
+                $self->right($cell);
+            }
+            else {
+                $self->wrong( $cell, $adapter->toString($result) );
+            }
+          }
+          otherwise {
+            my $e = shift;
+            $self->exception( $cell, $e );
+          };
+    }
 }
 
-sub fixtureName
-{
-	my $self = shift;
-	my $tables = shift;
-	return $tables->at(0, 0, 0);
+sub fixtureName {
+    my $self   = shift;
+    my $tables = shift;
+    return $tables->at( 0, 0, 0 );
 }
 
-sub loadFixture
-{
-	my $self = shift;
-	my $fixtureName = shift;
+sub loadFixture {
+    my $self        = shift;
+    my $fixtureName = shift;
 
-	my $foundButNotFixture = qq|"$fixtureName" was found, but it's not a fixture.\n|;
+    my $foundButNotFixture =
+      qq|"$fixtureName" was found, but it's not a fixture.\n|;
 
-	my $fixture = $self->_createNewInstance($fixtureName);
+    my $fixture = $self->_createNewInstance($fixtureName);
 
     throw Test::C2FIT::Exception($foundButNotFixture)
-    	unless $fixture->isa('Test::C2FIT::Fixture');
-		
-	return $fixture;
+      unless UNIVERSAL::isa( $fixture, 'Test::C2FIT::Fixture' );
+
+    return $fixture;
 }
 
 #
@@ -330,54 +309,54 @@ sub loadFixture
 #   - should be the only code creating instances of user specific packages
 #
 sub _createNewInstance {
-    my ($self,$name) = @_;
+    my ( $self, $name ) = @_;
 
-	my $perlPackageName = $self->_java2PerlFixtureName($name);
+    my $perlPackageName = $self->_java2PerlFixtureName($name);
     my $instance;
-	my $notFound = qq|The fixture "$name" was not found.\n|;
+    my $notFound = qq|The fixture "$name" was not found.\n|;
 
     try {
         $instance = $perlPackageName->new();
-    } otherwise {
-    };
-    if (!ref($instance)) {
+      }
+      otherwise {};
+    if ( !ref($instance) ) {
         try {
             eval "use $perlPackageName;";
             warn 1, " Result of use pgkName: $@" if $@;
             $instance = $perlPackageName->new();
-        } otherwise {
-    		my $e = shift;
+          }
+          otherwise {
+            my $e = shift;
             warn 1, " Error Instantiating a Package: $e";
 
-	    	throw Test::C2FIT::Exception($notFound);
-        };
+            throw Test::C2FIT::Exception($notFound);
+          };
     }
 
-    throw Test::C2FIT::Exception("$perlPackageName - instantiation error")  # if new does not return a ref...
-        unless ref($instance);
+    throw Test::C2FIT::Exception( "$perlPackageName - instantiation error"
+      )    # if new does not return a ref...
+      unless ref($instance);
 
-	return $instance;
+    return $instance;
 }
 
+sub _java2PerlFixtureName {
+    my ( $self, $fixtureName ) = @_;
+    $fixtureName =~ s/^fit\./Test\.C2FIT\./;
 
-sub _java2PerlFixtureName
-{
-	my ($self, $fixtureName) = @_;
-	$fixtureName =~ s/^fit\./Test\.C2FIT\./;
+    # Need this because example and fat packages are in our namespace - prevents
+    # creation of top level namespace, frowned upon by CPAN indexer.
+    $fixtureName =~ s/^eg\./Test\.C2FIT\.eg\./;
+    $fixtureName =~ s/^fat\./Test\.C2FIT\.fat\./;
 
-	# Need this because example and fat packages are in our namespace - prevents
-	# creation of top level namespace, frowned upon by CPAN indexer.
-	$fixtureName =~ s/^eg\./Test\.C2FIT\.eg\./;
-	$fixtureName =~ s/^fat\./Test\.C2FIT\.fat\./;
-
-	$fixtureName =~ s/\./::/g;
-	return $fixtureName;
+    $fixtureName =~ s/\./::/g;
+    return $fixtureName;
 }
 
 #
 #   rules for determination of the TypeAdapter to be uses for a column
 #
-#   1. suggestFieldType / suggestMethodResultType returns the 
+#   1. suggestFieldType / suggestMethodResultType returns the
 #      fully qualified package name of the TypeAdapter (inherits from Test::C2FIT::TypeAdapter).
 #
 #   2. (when 1. returned undef)
@@ -386,77 +365,69 @@ sub _java2PerlFixtureName
 #      Test::C2FIT::GenericAdapter for fields
 #
 
-sub suggestFieldType {                  # fields in ColumnFixture, RowFixture and setter parameter in ActionFixtures
-    my ($self,$fieldColumnName) = @_;
+sub suggestFieldType
+{   # fields in ColumnFixture, RowFixture and setter parameter in ActionFixtures
+    my ( $self, $fieldColumnName ) = @_;
     return $self->{fieldColumnTypeMap}->{$fieldColumnName};
 }
 
-sub suggestMethodResultType {           # method return values in all Fixtures
-    my ($self,$methodColumnName) = @_;
+sub suggestMethodResultType {    # method return values in all Fixtures
+    my ( $self, $methodColumnName ) = @_;
     return $self->{methodColumnTypeMap}->{$methodColumnName};
 }
 
-sub suggestMethodParamType {            # method param - see ActionFixture and TypeAdapter
-    my ($self,$methodName) = @_;
+sub suggestMethodParamType {  # method param - see ActionFixture and TypeAdapter
+    my ( $self, $methodName ) = @_;
     return $self->{methodSetterTypeMap}->{$methodName};
-};
+}
 
 package Test::C2FIT::Counts;
 
-sub new
-{
-	my $pkg = shift;
-	bless
-	{
-		right		=> 0,
-		wrong		=> 0,
-		ignores		=> 0,
-		exceptions	=> 0
-	}, $pkg;
+sub new {
+    my $pkg = shift;
+    bless {
+        right      => 0,
+        wrong      => 0,
+        ignores    => 0,
+        exceptions => 0
+    }, $pkg;
 }
 
-sub toString
-{
-	my $self = shift;
-	join(", ", map { $self->{$_} . " " . $_ } qw(right wrong ignores exceptions))
+sub toString {
+    my $self = shift;
+    join( ", ",
+        map { $self->{$_} . " " . $_ } qw(right wrong ignores exceptions) );
 }
 
-sub tally
-{
-	my $self = shift;
-	my($counts) = @_;
+sub tally {
+    my $self = shift;
+    my ($counts) = @_;
 
-	$self->{'right'} += $counts->{'right'};
-	$self->{'wrong'} += $counts->{'wrong'};
-	$self->{'ignores'} += $counts->{'ignores'};
-	$self->{'exceptions'} += $counts->{'exceptions'};
+    $self->{'right'}      += $counts->{'right'};
+    $self->{'wrong'}      += $counts->{'wrong'};
+    $self->{'ignores'}    += $counts->{'ignores'};
+    $self->{'exceptions'} += $counts->{'exceptions'};
 }
 
 package Test::C2FIT::Runtime;
 
 use overload '""' => \&toString;
 
-sub new
-{
-	use Benchmark;
-	my $pkg = shift;
-	bless
-	{
-		start => new Benchmark()
-	}, $pkg;
+sub new {
+    use Benchmark;
+    my $pkg = shift;
+    bless { start => new Benchmark() }, $pkg;
 }
 
-sub toString
-{
-	my $self = shift;
-	my $end = new Benchmark();
-	my $timeDiff = timediff($end,$self->{start});
-	my $timeStr = timestr($timeDiff);
-	return $timeStr;
+sub toString {
+    my $self     = shift;
+    my $end      = new Benchmark();
+    my $timeDiff = timediff( $end, $self->{start} );
+    my $timeStr  = timestr($timeDiff);
+    return $timeStr;
 }
 
 1;
-
 
 =pod
 

@@ -1,11 +1,10 @@
-# $Id: GenericArrayAdapter.pm,v 1.5 2006/05/15 08:37:07 tonyb Exp $
+# $Id: GenericArrayAdapter.pm,v 1.6 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
 #
 # Perl translation by Dave W. Smith <dws@postcognitive.com>
 # Modified by Tony Byrne <fit4perl@byrnehq.com>
-
 
 package Test::C2FIT::GenericArrayAdapter;
 
@@ -15,29 +14,29 @@ use vars qw(@ISA);
 
 sub parse {
     my $self = shift;
-    my($s) = @_;
+    my ($s) = @_;
 
-    return [ split(/,/, $s) ];
+    return [ split( /,/, $s ) ];
 }
 
 sub toString {
     my $self = shift;
-    my($o) = @_;
+    my ($o) = @_;
 
-    return join(',', @$o);
+    return join( ',', @$o );
 }
 
 sub equals {
     my $self = shift;
-    my($a, $b) = @_;
+    my ( $a, $b ) = @_;
 
     return 0 unless ref($a) eq "ARRAY";
     return 0 unless ref($b) eq "ARRAY";
 
-#DEBUG print "ArrayArrayAdapter::equals ", ref($a), ", ", ref($b), "\n";
+    #DEBUG print "ArrayArrayAdapter::equals ", ref($a), ", ", ref($b), "\n";
     return 0 if scalar @$a != scalar @$b;
-    for ( my $i = 0; $i < scalar @$a ; ++$i ) {
-	return 0 if $$a[$i] ne $$b[$i]
+    for ( my $i = 0 ; $i < scalar @$a ; ++$i ) {
+        return 0 if $$a[$i] ne $$b[$i];
     }
     return 1;
 }

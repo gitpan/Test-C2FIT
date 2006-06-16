@@ -5,29 +5,29 @@ use Test::C2FIT::FileRunner;
 use Test::C2FIT::WikiRunner;
 use Exporter();
 use Getopt::Std;
-@ISA = qw(Exporter);
+@ISA    = qw(Exporter);
 @EXPORT = qw(file_runner wiki_runner fit_shell);
 use strict;
 use warnings;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 sub file_runner {
     my $param = {};
-    die "unsupported param!" unless getopt("L:",$param);
-    local $SIG{'__WARN__'} = _commonLogging($param->{L});
+    die "unsupported param!" unless getopt( "L:", $param );
+    local $SIG{'__WARN__'} = _commonLogging( $param->{L} );
 
-    unshift(@INC,'.') unless grep { /^\.$/ } @INC;
-    new Test::C2FIT::FileRunner()->run(@ARGV);
+    unshift( @INC, '.' ) unless grep { /^\.$/ } @INC;
+    Test::C2FIT::FileRunner->new()->run(@ARGV);
 }
 
 sub wiki_runner {
     my $param = {};
-    die "unsupported param!" unless getopt("L:",$param);
-    local $SIG{'__WARN__'} = _commonLogging($param->{L});
+    die "unsupported param!" unless getopt( "L:", $param );
+    local $SIG{'__WARN__'} = _commonLogging( $param->{L} );
 
-    unshift(@INC,'.') unless grep { /^\.$/ } @INC;
-    new Test::C2FIT::WikiRunner()->run(@ARGV);
+    unshift( @INC, '.' ) unless grep { /^\.$/ } @INC;
+    Test::C2FIT::WikiRunner->new()->run(@ARGV);
 }
 
 sub fit_shell {
@@ -41,16 +41,16 @@ sub _commonLogging {
     $loglevel = 3 unless defined($loglevel);
 
     return sub {
-        local($_,$&,$1);
+        local ( $_, $&, $1 );
 
-        if (defined($_[0]) && $_[0] =~ /^(\d+)/) {
+        if ( defined( $_[0] ) && $_[0] =~ /^(\d+)/ ) {
             return unless $1 >= $loglevel;
         }
 
-        # my ($sec,$min,$hour,$mday,$mon,$year,undef,undef,undef) = localtime(time);
-        # $mon++;
-        # $year = $year + 1900;
-        # print STDERR sprintf("%02d.%02d.%04d %02d:%02d:%02d ",$mday,$mon,$year,$hour,$min,$sec);
+# my ($sec,$min,$hour,$mday,$mon,$year,undef,undef,undef) = localtime(time);
+# $mon++;
+# $year = $year + 1900;
+# print STDERR sprintf("%02d.%02d.%04d %02d:%02d:%02d ",$mday,$mon,$year,$hour,$min,$sec);
         print STDERR @_;
     };
 }
@@ -59,66 +59,69 @@ sub _commonLogging {
 #   (help-) Package implementing an interactive shell
 #
 {
-package Test::C2FIT::_Shell;
-use Config;
-use strict;
-use warnings;
 
-sub new {
-  my $pkg = shift;
-  my $self = {
-        lastCmd         => undef,
-        perlBinary      => $Config{perlpath},
-        options         => {
-            input       => ".",
-            output      => ".",
-            inc         => ".",
-            perl_opt    => undef,
-            log_level   => undef,
-            runner      => 'file_runner',
-            verbose     => 0,
-        },
-        cmdDispatch     => {
-            help        => \&Test::C2FIT::_Shell::help,
-            show        => \&Test::C2FIT::_Shell::show,
-            set         => \&Test::C2FIT::_Shell::set,
-            run         => \&Test::C2FIT::_Shell::run,
-            runall      => \&Test::C2FIT::_Shell::runall,
-            nop         => sub { 1     },
-            quit        => sub { undef },
-        },
-        parseRunDispatch => {
-            rerun       => \&Test::C2FIT::_Shell::rerun,
-            infile      => \&Test::C2FIT::_Shell::runInfile,
-            files       => \&Test::C2FIT::_Shell::runFiles,
-            inout       => \&Test::C2FIT::_Shell::runInOut,
-        }
-  };
-  return bless $self, $pkg;
-}
+    package Test::C2FIT::_Shell;
+    use Config;
+    use strict;
+    use warnings;
 
-sub init {
-    my $self = shift;
-    #
-    #   check if input/output/lib exists
-    #
-    my $v = {};
-
-    $v->{input} = "input"   if(-d "./input");
-    $v->{output}= "output"  if(-d "./output");
-    $v->{inc}   = "lib"     if(-d "./lib");
-
-    if(scalar(%$v)) {
-        while(my ($ik,$iv) = each(%$v)) {
-            $self->{options}->{$ik} = $iv;
-        }
-        $self->msg("INFO: input/ouptut/lib diretories found, using them!\n");
-        $self->show;
+    sub new {
+        my $pkg  = shift;
+        my $self = {
+            lastCmd    => undef,
+            perlBinary => $Config{perlpath},
+            options    => {
+                input     => ".",
+                output    => ".",
+                inc       => ".",
+                perl_opt  => undef,
+                log_level => undef,
+                runner    => 'file_runner',
+                verbose   => 0,
+            },
+            cmdDispatch => {
+                help   => \&Test::C2FIT::_Shell::help,
+                show   => \&Test::C2FIT::_Shell::show,
+                set    => \&Test::C2FIT::_Shell::set,
+                run    => \&Test::C2FIT::_Shell::run,
+                runall => \&Test::C2FIT::_Shell::runall,
+                nop    => sub { 1 },
+                quit   => sub { undef },
+            },
+            parseRunDispatch => {
+                rerun  => \&Test::C2FIT::_Shell::rerun,
+                infile => \&Test::C2FIT::_Shell::runInfile,
+                files  => \&Test::C2FIT::_Shell::runFiles,
+                inout  => \&Test::C2FIT::_Shell::runInOut,
+            }
+        };
+        return bless $self, $pkg;
     }
-}
 
-sub help {
-    print <<'_EOH_'; return 1;
+    sub init {
+        my $self = shift;
+
+        #
+        #   check if input/output/lib exists
+        #
+        my $v = {};
+
+        $v->{input}  = "input"  if ( -d "./input" );
+        $v->{output} = "output" if ( -d "./output" );
+        $v->{inc}    = "lib"    if ( -d "./lib" );
+
+        if ( scalar(%$v) ) {
+            while ( my ( $ik, $iv ) = each(%$v) ) {
+                $self->{options}->{$ik} = $iv;
+            }
+            $self->msg(
+                "INFO: input/ouptut/lib diretories found, using them!\n");
+            $self->show;
+        }
+    }
+
+    sub help {
+        print <<'_EOH_'; return 1;
 # Supported commands:
 # help      - show this help
 # show      - show variables
@@ -168,203 +171,206 @@ sub help {
 #   it (e.g. grep -v "^#")
 #
 _EOH_
-}
-
-sub msg {
-    my $self = shift;
-    print "# ",@_;
-    1;
-}
-
-sub show {
-    my $self = shift;
-    my @k = sort keys %{$self->{options}};
-    
-    for my $k (@k) {
-        my $v = $self->{options}->{$k};
-           $v = "<not defined>" unless defined($v);
-        print sprintf("# %10s: %s\n",$k,$v);
-    }
-    1;
-}
-
-sub set {
-    my ($self,$rest) = @_;
-    return $self->msg("WARN: wrong syntax for set!\n") 
-        unless $rest =~ /(\S+)(?:\s+(\S.*))?$/;
-
-    my $key = $1;
-    my $val = $2;
-
-    return $self->msg("WARN: invalid variable $key!\n")
-        unless exists $self->{options}->{$key};
-
-    if($key eq "inc" && $val eq "@") {
-        $val = join(":",@INC);
     }
 
-    $self->{options}->{$key} = $val;
-    $self->{lastCmd} = undef;
-    1;
-}
-
-sub runall {
-    my $self = shift;
-    $self->run("*.htm*");
-}
-
-sub run {
-    my ($self,$rest) = @_;
-    my $dispatch = $self->{parseRunDispatch};
-
-    my ($key,@vals) = $self->parseRunCmd($rest);
-    die "internal error. unknown state: $key\n" 
-        unless exists $dispatch->{$key};
-
-    my $code = $dispatch->{$key};
-    return $code->($self,@vals);
-}
-
-sub rerun { 
-    my $self = shift;
-    return $self->msg("WARN: no cmd to rerun!\n") unless defined($self->{lastCmd});
-    return $self->_run($self->{lastCmd});
-}
-
-#
-#   runInOut($in,$out) - both filenames with path and suffix
-#
-sub runInOut {
-    my ($self,$in,$out) = @_;
-
-    return $self->msg("WARN: in and out identical: $in Will be ignored!\n'") 
-        if $in eq $out;
-
-    my $cmd = $self->_buildCmd;
-    $cmd .= " $in $out";
-    return $self->_run($cmd);
-}
-
-#
-#   runInfile (path+filename) * optionally without the .html suffix
-#
-sub runInfile {
-    my ($self,$in) = @_;
-    my $input = quotemeta($self->{options}->{input});
-    my $output= $self->{options}->{output};
-
-    my $out = $in;
-    $in  .= ".html" unless $in =~ /\.html$/i;
-    $out =~ s/^$input/$output/;
-
-    return $self->runInOut($in,$out);
-}
-
-#
-#   runFiles(@files) - list of input file names with path and extension
-#
-sub runFiles {
-    my ($self,@files) = @_;
-    for my $f (@files) {
-        $self->runInfile($f);
-    }
-    1;
-}
-
-sub _run {
-    my ($self,$cmd) = @_;
-    die "no cmd given!" unless defined($cmd);
-    $self->{lastCmd} = $cmd;
-    $self->msg("# CMD:$cmd\n") if $self->{options}->{verbose};
-    system($cmd);
-    1;
-}
-
-sub _buildCmd {                     # setup the command up to ARGV
-    my $self = shift;
-    my $cmd = $self->{perlBinary};
-    my $options = $self->{options};
-
-    $cmd .= " ".$options->{perl_opt}." " if defined($options->{perl_opt});
-
-    if (defined($options->{inc})) {
-        my @inc = split(/[:;]/,$options->{inc});
-        my $inc = " -I".join(" -I",@inc);
-        $cmd .= $inc;
+    sub msg {
+        my $self = shift;
+        print "# ", @_;
+        1;
     }
 
-    $cmd .= " -MTest::C2FIT -e ". $options->{runner}. " -- ";
+    sub show {
+        my $self = shift;
+        my @k    = sort keys %{ $self->{options} };
 
-    my $logLevel =  $options->{log_level};
-    $cmd .= " -L $logLevel " if defined($logLevel);
-
-    return $cmd;
-}
-
-sub parseRunCmd {
-    my ($self,$rest) = @_;
-    my $input = $self->{options}->{input};
-    my $output= $self->{options}->{output};
-    my $hasWildcards = 0;
-    my @files = ();
-
-    return ("rerun") unless defined($rest);
-
-    my @items = map { /\*/ && $hasWildcards++; $_ } split /\s+/,$rest;
-
-    if($hasWildcards) {
-        for my $item (@items) {
-            push(@files,glob("$input/$item"));
+        for my $k (@k) {
+            my $v = $self->{options}->{$k};
+            $v = "<not defined>" unless defined($v);
+            print sprintf( "# %10s: %s\n", $k, $v );
         }
-        return ("files",@files);
+        1;
     }
-    if (2 == @items) {
-        return ("inout","$input/$items[0]","$output/$items[1]");
+
+    sub set {
+        my ( $self, $rest ) = @_;
+        return $self->msg("WARN: wrong syntax for set!\n")
+          unless $rest =~ /(\S+)(?:\s+(\S.*))?$/;
+
+        my $key = $1;
+        my $val = $2;
+
+        return $self->msg("WARN: invalid variable $key!\n")
+          unless exists $self->{options}->{$key};
+
+        if ( $key eq "inc" && $val eq "@" ) {
+            $val = join( ":", @INC );
+        }
+
+        $self->{options}->{$key} = $val;
+        $self->{lastCmd} = undef;
+        1;
     }
-    return("infile","$input/$items[0]");
-}
 
-sub runShell {                              # main loop of fit_shell
-    my ($self,$inFH) = @_;
-    my $line;
-    my $dispatch = $self->{cmdDispatch};
-    my $prompt = "fit> ";
+    sub runall {
+        my $self = shift;
+        $self->run("*.htm*");
+    }
 
-    $| = 1;
-   
-    print $prompt;
-    while($line = <$inFH>) {
-        $line=~ s/(\012\015?|\015\012?)$//;
-        my ($cmd,$rest) = $self->parseCmd($line);
+    sub run {
+        my ( $self, $rest ) = @_;
+        my $dispatch = $self->{parseRunDispatch};
 
-        die "internal error. Unknown command/state: $cmd\n" unless exists $dispatch->{$cmd};
+        my ( $key, @vals ) = $self->parseRunCmd($rest);
+        die "internal error. unknown state: $key\n"
+          unless exists $dispatch->{$key};
 
-        my $code = $dispatch->{$cmd};
-        my $rv = $code->($self,$rest);
-        last unless $rv;
+        my $code = $dispatch->{$key};
+        return $code->( $self, @vals );
+    }
+
+    sub rerun {
+        my $self = shift;
+        return $self->msg("WARN: no cmd to rerun!\n")
+          unless defined( $self->{lastCmd} );
+        return $self->_run( $self->{lastCmd} );
+    }
+
+    #
+    #   runInOut($in,$out) - both filenames with path and suffix
+    #
+    sub runInOut {
+        my ( $self, $in, $out ) = @_;
+
+        return $self->msg("WARN: in and out identical: $in Will be ignored!\n'")
+          if $in eq $out;
+
+        my $cmd = $self->_buildCmd;
+        $cmd .= " $in $out";
+        return $self->_run($cmd);
+    }
+
+    #
+    #   runInfile (path+filename) * optionally without the .html suffix
+    #
+    sub runInfile {
+        my ( $self, $in ) = @_;
+        my $input  = quotemeta( $self->{options}->{input} );
+        my $output = $self->{options}->{output};
+
+        $in .= ".html" unless $in =~ /\.html$/i;
+        my $out = $in;
+        $out =~ s/^$input/$output/;
+
+        return $self->runInOut( $in, $out );
+    }
+
+    #
+    #   runFiles(@files) - list of input file names with path and extension
+    #
+    sub runFiles {
+        my ( $self, @files ) = @_;
+        for my $f (@files) {
+            $self->runInfile($f);
+        }
+        1;
+    }
+
+    sub _run {
+        my ( $self, $cmd ) = @_;
+        die "no cmd given!" unless defined($cmd);
+        $self->{lastCmd} = $cmd;
+        $self->msg("# CMD:$cmd\n") if $self->{options}->{verbose};
+        system($cmd);
+        1;
+    }
+
+    sub _buildCmd {    # setup the command up to ARGV
+        my $self    = shift;
+        my $cmd     = $self->{perlBinary};
+        my $options = $self->{options};
+
+        $cmd .= " " . $options->{perl_opt} . " "
+          if defined( $options->{perl_opt} );
+
+        if ( defined( $options->{inc} ) ) {
+            my @inc = split( /[:;]/, $options->{inc} );
+            my $inc = " -I" . join( " -I", @inc );
+            $cmd .= $inc;
+        }
+
+        $cmd .= " -MTest::C2FIT -e " . $options->{runner} . " -- ";
+
+        my $logLevel = $options->{log_level};
+        $cmd .= " -L $logLevel " if defined($logLevel);
+
+        return $cmd;
+    }
+
+    sub parseRunCmd {
+        my ( $self, $rest ) = @_;
+        my $input        = $self->{options}->{input};
+        my $output       = $self->{options}->{output};
+        my $hasWildcards = 0;
+        my @files        = ();
+
+        return ("rerun") unless defined($rest);
+
+        my @items = map { /\*/ && $hasWildcards++; $_ } split /\s+/, $rest;
+
+        if ($hasWildcards) {
+            for my $item (@items) {
+                push( @files, glob("$input/$item") );
+            }
+            return ( "files", @files );
+        }
+        if ( 2 == @items ) {
+            return ( "inout", "$input/$items[0]", "$output/$items[1]" );
+        }
+        return ( "infile", "$input/$items[0]" );
+    }
+
+    sub runShell {    # main loop of fit_shell
+        my ( $self, $inFH ) = @_;
+        my $line;
+        my $dispatch = $self->{cmdDispatch};
+        my $prompt   = ( -t "$inFH" ) ? "fit> " : "";
+
+        $| = 1;
+
         print $prompt;
+        while ( $line = <$inFH> ) {
+            $line =~ s/(\012\015?|\015\012?)$//;
+            my ( $cmd, $rest ) = $self->parseCmd($line);
+
+            die "internal error. Unknown command/state: $cmd\n"
+              unless exists $dispatch->{$cmd};
+
+            my $code = $dispatch->{$cmd};
+            my $rv = $code->( $self, $rest );
+            last unless $rv;
+            print $prompt;
+        }
     }
-}
 
-sub parseCmd {
-    my ($self,$line) = @_;
+    sub parseCmd {
+        my ( $self, $line ) = @_;
 
-    return ("run",undef)    if !defined($line) || $line eq "";
-    return ("nop")          if $line =~ /^\s*#/;
+        return ( "run", undef ) if !defined($line) || $line eq "";
+        return ("nop") if $line =~ /^\s*#/;
 
-    $line =~ s/^\s+//;
-    $line =~ s/\s+$//;
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
 
-    if($line =~ /^!\s*(\S.*)?$/) {          # ! is alias for "run"
-        return ("run",$1);
+        if ( $line =~ /^!\s*(\S.*)?$/ ) {    # ! is alias for "run"
+            return ( "run", $1 );
+        }
+        if ( $line =~ /^(\w+)\b\s*(\S.*)?$/ ) {
+            return ( $1, $2 );
+        }
+        return ("nop");
     }
-    if($line =~ /^(\w+)\b\s*(\S.*)?$/) {
-        return ($1,$2);
-    }
-    return ("nop");
-}
 
-1;
+    1;
 };
 
 1;
@@ -428,7 +434,7 @@ and enter "help" for more information.
 
 Suppose, your tests-related files reside in a directory with three subdirectories:
 input - where the files come from, output - where the results will be written to and
-lib - where your fixtures reside, all you need to do is just enter "runall"
+lib - where your fixtures reside, all you need to do is just to enter "runall"
 
 =back
 
@@ -489,8 +495,8 @@ http://fit.c2.com/
 The 'examples' directory of this distribution contains some sample FIT
 tests and sample applications that they test.  Invoke FileRunner.pl on
 any of the test input files from examples/input and view the output in
-a browser. To invoke the tests use gmake (if you have :) or 
-do_tests.bat / do_tests.sh
+a browser. To invoke the tests use do_tests.bat / do_tests.sh in
+the appropriate directory.
 
 The directory examples-perl contains examples written for this perl-port
 only.

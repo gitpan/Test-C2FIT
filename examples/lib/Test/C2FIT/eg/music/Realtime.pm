@@ -16,8 +16,10 @@ use Test::C2FIT::Fixture;
 sub new {
     my $pkg = shift;
 
-    return bless { system => $Test::C2FIT::eg::music::Simulator::system,
-                   @_ }, $pkg;
+    return bless {
+        system => $Test::C2FIT::eg::music::Simulator::system,
+        @_
+    }, $pkg;
 }
 
 sub time {
@@ -37,13 +39,13 @@ sub do_pause {
 sub do_await {
     my $self = shift;
 
-    $self->_system("wait", $self->{'cells'}->more());
+    $self->_system( "wait", $self->{'cells'}->more() );
 }
 
 sub do_fail {
     my $self = shift;
 
-    $self->_system("fail", $self->{'cells'}->more());
+    $self->_system( "fail", $self->{'cells'}->more() );
 }
 
 sub do_enter {
@@ -62,17 +64,14 @@ sub do_press {
 
 sub _system {
     my $self = shift;
-    my($prefix, $cell) = @_;
+    my ( $prefix, $cell ) = @_;
 
-    my $method = Test::C2FIT::Fixture::camel($prefix . " " . $cell->text());
-    eval {
-	$self->{'system'}->$method();
-    };
-    if ( $@ ) {
-	$self->exception($cell, $@);
+    my $method = Test::C2FIT::Fixture::camel( $prefix . " " . $cell->text() );
+    eval { $self->{'system'}->$method(); };
+    if ($@) {
+        $self->exception( $cell, $@ );
     }
 }
-
 
 1;
 

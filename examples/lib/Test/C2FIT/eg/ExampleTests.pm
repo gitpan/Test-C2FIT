@@ -12,41 +12,46 @@ use Error qw( :try );
 use Test::C2FIT::Fixture;
 use IO::File;
 
-sub new
-{
-	my $pkg  = shift;
-	my $self = $pkg->SUPER::new(basedir => undef);
+sub new {
+    my $pkg  = shift;
+    my $self = $pkg->SUPER::new( basedir => undef );
 
     for my $adir qw(.) {
-        $self->{basedir} = $adir if -d "$adir" &&
-                                    -d "$adir/input" &&
-                                    -d "$adir/output";
+        $self->{basedir} = $adir
+          if -d "$adir"
+          && -d "$adir/input"
+          && -d "$adir/output";
     }
-    die "expecting input and output directories somewhere!" unless defined($self->{basedir});
+    die "expecting input and output directories somewhere!"
+      unless defined( $self->{basedir} );
 
-    $self->{input}  = undef;
-    $self->{tables} = undef;
-    $self->{fixture} = undef;
+    $self->{input}     = undef;
+    $self->{tables}    = undef;
+    $self->{fixture}   = undef;
     $self->{runCounts} = new Test::C2FIT::Counts();
-    $self->{footnote} = undef;
-    $self->{fileCell} = undef;
+    $self->{footnote}  = undef;
+    $self->{fileCell}  = undef;
 
     return $self;
 }
 
 sub run {
-    my $self = shift;
-    my $input = $self->read($self->{file});
+    my $self  = shift;
+    my $input = $self->read( $self->{file} );
     $self->{fixture} = new Test::C2FIT::Fixture();
-    if (defined($self->{wiki}) && $self->{wiki} eq "true") {
-        $self->{tables} = new Test::C2FIT::Parse($input, ["wiki", "table", "tr", "td"]);
-        $self->{fixture}->doTables($self->{tables}->{parts});
-    } else {
-        $self->{tables} = new Test::C2FIT::Parse($input, ["table", "tr", "td"]);
-        $self->{fixture}->doTables($self->{tables});
+    if ( defined( $self->{wiki} ) && $self->{wiki} eq "true" ) {
+        $self->{tables} =
+          new Test::C2FIT::Parse( $input, [ "wiki", "table", "tr", "td" ] );
+        $self->{fixture}->doTables( $self->{tables}->{parts} );
     }
-    $self->{runCounts}->tally($self->{fixture}->{counts});
-    # 
+    else {
+        $self->{tables} =
+          new Test::C2FIT::Parse( $input, [ "table", "tr", "td" ] );
+        $self->{fixture}->doTables( $self->{tables} );
+    }
+    $self->{runCounts}->tally( $self->{fixture}->{counts} );
+
+    #
     # TBD: following line is not correct
     # $Test::C2FIT::Fixture::summary{"counts run"} = $self->{runCounts};
 }
@@ -56,28 +61,31 @@ sub right() {
     $self->run();
     return $self->{fixture}->{counts}->{right};
 }
+
 sub wrongCount() {
     my $self = shift;
     return $self->{fixture}->{counts}->{wrong};
 }
+
 sub ignores() {
     my $self = shift;
     return $self->{fixture}->{counts}->{ignores};
 }
+
 sub exceptions() {
     my $self = shift;
     return $self->{fixture}->{counts}->{exceptions};
 }
 
 sub read {
-    my $self = shift;
+    my $self     = shift;
     my $filename = shift;
-    my $fqfn = $self->{basedir} ."/input/". $filename;
+    my $fqfn     = $self->{basedir} . "/input/" . $filename;
 
     my $of = new IO::File "<$fqfn";
     die unless ref($of);
 
-    my $cont = join('',<$of>);
+    my $cont = join( '', <$of> );
     $of = undef;
     $cont;
 }
@@ -85,16 +93,19 @@ sub read {
 #
 # nice perl trickery, since the java-fit-document uses a public int wrong() and
 # the Fixture uses as void wrong(Parse cell)
-# 
+#
 
 sub wrong {
     my $self = shift;
-    if(scalar(@_) == 0) {
+    if ( scalar(@_) == 0 ) {
+
         #
         #  public int wrong()
         #
         return $self->wrongCount();
-    } else {
+    }
+    else {
+
         #
         #   wrong(Parse cell)
         #

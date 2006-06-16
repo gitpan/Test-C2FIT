@@ -7,11 +7,10 @@ package Test::C2FIT::fat::NotAFixture;
 use strict;
 
 sub new {
-	my $pkg = shift;
+    my $pkg = shift;
     $pkg = ref($pkg) if ref($pkg);
-	return bless {}, $pkg;
+    return bless {}, $pkg;
 }
-
 
 1;
 

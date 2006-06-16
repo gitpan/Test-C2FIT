@@ -13,24 +13,25 @@ use strict;
 sub new {
     my $pkg = shift;
 
-    return bless { message => $_[0],
-                   caller => $_[1],
-                   @_ }, $pkg;
+    return bless {
+        message => $_[0],
+        caller  => $_[1],
+        @_
+    }, $pkg;
 }
 
 sub message {
     my $self = shift;
 
-    return $self->{'message'}
+    return $self->{'message'};
 }
-
 
 sub ok {
     my $self = shift;
     if ( $self->{'message'} eq "load jamed" ) {
-	Test::C2FIT::eg::music::MusicPlayer::stop();
+        Test::C2FIT::eg::music::MusicPlayer::stop();
     }
-    $Test::C2FIT::ActionFixture::actor = $self->{'caller'}
+    $Test::C2FIT::ActionFixture::actor = $self->{'caller'};
 }
 
 1;
@@ -63,3 +64,4 @@ public class Dialog extends Fixture {
 
 }
 =cut
+

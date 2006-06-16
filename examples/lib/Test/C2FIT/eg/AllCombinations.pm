@@ -9,49 +9,51 @@ use base 'Test::C2FIT::eg::AllFiles';
 
 sub new {
     my $pkg = shift;
-	my $self = bless $pkg->SUPER::new(), $pkg;
-    $self->{lists} = [];
+    my $self = bless $pkg->SUPER::new(), $pkg;
+    $self->{lists}      = [];
     $self->{caseNumber} = 1;
-    $self->{row} = undef;
+    $self->{row}        = undef;
     return $self;
 }
 
 sub doTable {
-    my ($self,$table) = @_;
+    my ( $self, $table ) = @_;
     $self->{row} = $table->{parts}->last();
     $self->SUPER::doTable($table);
     $self->combinations2();
 }
 
 sub doRow2 {
-    my ($self,$row,$files) = @_;
-    push(@{$self->{lists}},$files);
+    my ( $self, $row, $files ) = @_;
+    push( @{ $self->{lists} }, $files );
 }
 
 sub combinations2 {
     my $self = shift;
-    $self->combinations(0,[]);
+    $self->combinations( 0, [] );
 }
 
 sub combinations {
-    my ($self,$index,$combination) = @_;
-    if ($index == @{$self->{lists}} ) {
+    my ( $self, $index, $combination ) = @_;
+    if ( $index == @{ $self->{lists} } ) {
         $self->doCase($combination);
-    } else {
-        my @files = @{$self->{lists}->[$index]};
-        for(my $i = 0; $i < @files; $i++) {
+    }
+    else {
+        my @files = @{ $self->{lists}->[$index] };
+        for ( my $i = 0 ; $i < @files ; $i++ ) {
             $combination->[$index] = $files[$i];
-            $self->combinations($index+1,$combination);
+            $self->combinations( $index + 1, $combination );
         }
     }
 }
 
 sub doCase {
-    my ($self,$combination) = @_;
-    my $number = $self->tr($self->td("#"+$self->{caseNumber}++,undef),undef);
+    my ( $self, $combination ) = @_;
+    my $number =
+      $self->tr( $self->td( "#" + $self->{caseNumber}++, undef ), undef );
     $number->leaf()->addToTag(" colspan=2");
     $self->{row}->last()->{more} = $number;
-    $self->SUPER::doRow2($number,$combination);
+    $self->SUPER::doRow2( $number, $combination );
 }
 
 1;

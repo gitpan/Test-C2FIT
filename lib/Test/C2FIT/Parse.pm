@@ -1,4 +1,4 @@
-# $Id: Parse.pm,v 1.17 2006/05/15 08:37:07 tonyb Exp $
+# $Id: Parse.pm,v 1.18 2006/06/16 15:20:56 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -14,374 +14,351 @@ use vars qw(@tags);
 
 use Test::C2FIT::ParseException;
 
-our @tags = qw(table tr td);
+our @tags      = qw(table tr td);
 our $MAX_VALUE = 99999999999999999999999999;
 
-sub new
-{
-	my $pkg = shift;
-	my $class = ref $pkg || $pkg;
-	my $self = bless { }, $class;
-	$self->_parse(@_);
-	return $self;
+sub new {
+    my $pkg   = shift;
+    my $class = ref $pkg || $pkg;
+    my $self  = bless {}, $class;
+    $self->_parse(@_);
+    return $self;
 }
 
-sub from
-{
-	my $pkg = shift;
-	my($tag,$body,$parts,$more) = @_;
-	bless
-	{
-		leader	=> "\n",
-		tag		=> "<$tag>",
-		body	=> $body,
-		parts	=> $parts,
-		end		=> "</$tag>",
-		more	=> $more,
-		trailer	=> ""
-	}, $pkg;
+sub from {
+    my $pkg = shift;
+    my ( $tag, $body, $parts, $more ) = @_;
+    bless {
+        leader  => "\n",
+        tag     => "<$tag>",
+        body    => $body,
+        parts   => $parts,
+        end     => "</$tag>",
+        more    => $more,
+        trailer => ""
+    }, $pkg;
 }
 
-sub _parse
-{
-	my $self = shift;
-	my ($text, $tags, $level, $offset) = @_;
-	$tags = \@tags unless $tags;
-	$level = 0 unless $level;
-	$offset = 0 unless $offset;
+sub _parse {
+    my $self = shift;
+    my ( $text, $tags, $level, $offset ) = @_;
+    $tags   = \@tags unless $tags;
+    $level  = 0      unless $level;
+    $offset = 0      unless $offset;
 
-	my $lc = lc($text);
+    my $lc = lc($text);
 
-	my $startTag	= index($lc, "<" . $tags->[$level]);
-	my $endTag		= index($lc, ">", $startTag) + 1;
-	my $startEnd;
-	my $endEnd;
-	my $startMore;
+    my $startTag = index( $lc, "<" . $tags->[$level] );
+    my $endTag = index( $lc, ">", $startTag ) + 1;
+    my $startEnd;
+    my $endEnd;
+    my $startMore;
     my $isEmpty = 0;
 
-    if(substr($lc,$endTag-2,1) eq "/") {    # empty tag
+    if ( substr( $lc, $endTag - 2, 1 ) eq "/" ) {    # empty tag
         $startEnd = $endTag;
         $endEnd   = $endTag;
         $isEmpty  = 1;
-    } else {
-    	$startEnd	= $self->findMatchingEndTag($lc, $endTag, $tags->[$level], $offset);
-    	$endEnd		= index($lc, ">", $startEnd) + 1;
+    }
+    else {
+        $startEnd =
+          $self->findMatchingEndTag( $lc, $endTag, $tags->[$level], $offset );
+        $endEnd = index( $lc, ">", $startEnd ) + 1;
     }
 
-	$startMore	= index($lc, "<" . $tags->[$level], $endEnd);
+    $startMore = index( $lc, "<" . $tags->[$level], $endEnd );
 
+    if ( $startTag < 0 or $endTag < 0 or $startEnd < 0 or $endEnd < 0 ) {
 
-	if ($startTag < 0 or $endTag < 0 or $startEnd < 0 or $endEnd < 0)
-	{
         # warn  "PARSE: $startTag $endTag $startEnd $endEnd\n";
-		throw Test::C2FIT::ParseException ("Can't find tag: " . $tags->[$level] . "\n", $offset);
-	}
+        throw Test::C2FIT::ParseException(
+            "Can't find tag: " . $tags->[$level] . "\n", $offset );
+    }
 
     if ($isEmpty) {
-    	$self->{'tag'}	 	= substr($text,$startTag,$endTag - $startTag -2) . ">";
-    	$self->{'body'}		= "";
-    	$self->{'end'}		= "</". $tags->[$level] .">";
-    } else {
-    	$self->{'tag'}	 	= substr($text,$startTag,$endTag - $startTag);
-    	$self->{'body'}		= substr($text,$endTag,$startEnd - $endTag);
-    	$self->{'end'}		= substr($text,$startEnd,$endEnd - $startEnd);
+        $self->{'tag'} =
+          substr( $text, $startTag, $endTag - $startTag - 2 ) . ">";
+        $self->{'body'} = "";
+        $self->{'end'}  = "</" . $tags->[$level] . ">";
     }
-	$self->{'leader'} 	= substr($text,0,$startTag);
-	$self->{'trailer'}	= substr($text,$endEnd);
+    else {
+        $self->{'tag'}  = substr( $text, $startTag, $endTag - $startTag );
+        $self->{'body'} = substr( $text, $endTag,   $startEnd - $endTag );
+        $self->{'end'}  = substr( $text, $startEnd, $endEnd - $startEnd );
+    }
+    $self->{'leader'}  = substr( $text, 0, $startTag );
+    $self->{'trailer'} = substr( $text, $endEnd );
 
-	if ($level + 1 < scalar @{$tags})
-	{
-		$self->{'parts'} = $self->new($self->{'body'}, $tags, $level + 1, $offset + $endTag);
-		$self->{'body'} = undef;
-	}
-	else
-	{ 
-		#Check for nested table
-		my $index = index($self->{'body'}, "<" . $tags->[0]);
-		if ($index >= 0)
-		{
-				$self->{'parts'} = $self->new($self->{'body'}, $tags, 0, $offset + $endTag);
-				$self->{'body'} = '';
-		}
-	}
+    if ( $level + 1 < scalar @{$tags} ) {
+        $self->{'parts'} =
+          $self->new( $self->{'body'}, $tags, $level + 1, $offset + $endTag );
+        $self->{'body'} = undef;
+    }
+    else {
 
-	if ($startMore >= 0)
-	{
-		$self->{'more'} = $self->new($self->{'trailer'}, $tags, $level, $offset + $endEnd);
-		$self->{'trailer'} = undef;
-	}
+        #Check for nested table
+        my $index = index( $self->{'body'}, "<" . $tags->[0] );
+        if ( $index >= 0 ) {
+            $self->{'parts'} =
+              $self->new( $self->{'body'}, $tags, 0, $offset + $endTag );
+            $self->{'body'} = '';
+        }
+    }
+
+    if ( $startMore >= 0 ) {
+        $self->{'more'} =
+          $self->new( $self->{'trailer'}, $tags, $level, $offset + $endEnd );
+        $self->{'trailer'} = undef;
+    }
 }
 
-sub findMatchingEndTag
-{
-	my $self = shift;
-	my ($lc, $matchFromHere, $tag, $offset) = @_;
-
-	my $fromHere = $matchFromHere;
-	my $count = 1;
-	my $startEnd = 0;
-
-	while ($count > 0)
-	{
-		my $embeddedTag 	= index($lc, "<$tag", $fromHere);
-		my $embeddedTagEnd	= index($lc, "</$tag",$fromHere);
-
-		# Which one is closer?
-		throw Test::C2FIT::ParseException("Can't find tag: $tag\n", $offset)
-			if ($embeddedTag < 0 and $embeddedTagEnd < 0);
-
-		$embeddedTag 	= $MAX_VALUE if ($embeddedTag < 0); 
-		$embeddedTagEnd	= $MAX_VALUE if ($embeddedTagEnd < 0);
-
-		if ($embeddedTag < $embeddedTagEnd)
-		{
-			$count++;
-			$startEnd = $embeddedTag;
-			$fromHere = index($lc, ">" , $embeddedTag) + 1;
-		}
-		elsif ($embeddedTagEnd < $embeddedTag)
-		{
-			$count--;
-			$startEnd = $embeddedTagEnd;
-			$fromHere = index($lc, ">", $embeddedTagEnd) + 1;
-		}
-	}
-	return $startEnd;
-}
-
-
-sub size
-{
-	my $self = shift;
-	$self->more() ? $self->more()->size() + 1 : 1;
-}
-
-sub last
-{
-	my $self = shift;
-	$self->more() ? $self->more()->last() : $self;
-}
-
-sub leaf
-{
-	my $self = shift;
-	$self->parts() ? $self->parts()->leaf() : $self;
-}
-
-sub at
-{
-	my $self = shift;
-
-	return $self->_at3(@_) if 3 == @_;
-	return $self->_at2(@_) if 2 == @_;
-	return ($_[0] == 0 || not defined($self->more()))
-		? $self
-		: $self->more()->at($_[0] - 1);
-}
-
-sub _at2
-{			#TBD revisit this
-	my $self = shift;
-	return $self->at($_[0])->parts()->at($_[1]);
-}
-
-sub _at3
-{			#TBD revisit this
-	my $self = shift;
-	return $self->_at2($_[0], $_[1])->parts()->at($_[2]);
-}
-
-sub text
-{
-	my $self = shift;
-	return $self->htmlToText($self->body());
-}
-
-sub htmlToText
-{
-	my $self = shift;
-	my $s = shift;
-	return $s unless $s;
-	$s = $self->normalizeLineBreaks($s);
-	$s = $self->removeNonBreakTags($s);
-	$s = $self->condenseWhitespace($s);
-	$s = $self->unescape($s);
-	return $s;
-}
-
-sub removeNonBreakTags
-{
-	my $self = shift;
-	my $s = shift;
-	$s =~ s/(<(?!br)[^>]+>)//g;
-	return $s;
-}
-
-sub unescape
-{
-	my $self = shift;
-	my $s = shift;
-
-	$s =~ s|<br />|\n|g;
-	$s = $self->unescapeEntities($s);
-	$s = $self->unescapeSmartQuotes($s);
-
-	return $s;
-}
-
-sub unescapeSmartQuotes
-{
-	my $self = shift;
-	my $s = shift;
-
-	$s =~ s/\x{91}/\'/g;
-	$s =~ s/\x{92}/\'/g;
-	$s =~ s/\x{93}/\"/g;
-	$s =~ s/\x{94}/\"/g;
-
-	$s =~ s/\x{201c}/\"/g;
-	$s =~ s/\x{201d}/\"/g;
-	$s =~ s/\x{2018}/\'/g;
-	$s =~ s/\x{2019}/\'/g;
-
-	return $s;
-}
-
-sub unescapeEntities
-{
-	my $self = shift;
-	my $s = shift;
-	$s =~ s/\&lt;/</g;
-	$s =~ s/\&gt;/>/g;
-	$s =~ s/\&nbsp;/ /g;
-	$s =~ s/\&amp;/&/g;
-	$s =~ s/\&quot;/\"/g;
-	return $s;
-}
-
-sub normalizeLineBreaks
-{
-	my $self = shift;
-	my $s = shift;
-	$s =~ s|<\s*br\s*/?\s*>|<br />|g;
-	$s =~ s|<\s*/\s*p\s*>\s*<\s*p( .*?)?>|<br />|g;
-	return $s;
-}
-
-sub unformat
-{
-	my $self = shift;
-	my $s = shift;
-	$s =~ s/<[^>]+>//g;
-	return $s;
-}
-
-sub addToTag
-{
-	my $self = shift;
-	my($string) = @_;
-	$self->{'tag'} =~ s/>$/$string>/;
-}
-
-sub addToBody
-{
+sub findMatchingEndTag {
     my $self = shift;
-    my($string) = @_;
+    my ( $lc, $matchFromHere, $tag, $offset ) = @_;
+
+    my $fromHere = $matchFromHere;
+    my $count    = 1;
+    my $startEnd = 0;
+
+    while ( $count > 0 ) {
+        my $embeddedTag    = index( $lc, "<$tag",  $fromHere );
+        my $embeddedTagEnd = index( $lc, "</$tag", $fromHere );
+
+        # Which one is closer?
+        throw Test::C2FIT::ParseException( "Can't find tag: $tag\n", $offset )
+          if ( $embeddedTag < 0 and $embeddedTagEnd < 0 );
+
+        $embeddedTag    = $MAX_VALUE if ( $embeddedTag < 0 );
+        $embeddedTagEnd = $MAX_VALUE if ( $embeddedTagEnd < 0 );
+
+        if ( $embeddedTag < $embeddedTagEnd ) {
+            $count++;
+            $startEnd = $embeddedTag;
+            $fromHere = index( $lc, ">", $embeddedTag ) + 1;
+        }
+        elsif ( $embeddedTagEnd < $embeddedTag ) {
+            $count--;
+            $startEnd = $embeddedTagEnd;
+            $fromHere = index( $lc, ">", $embeddedTagEnd ) + 1;
+        }
+    }
+    return $startEnd;
+}
+
+sub size {
+    my $self = shift;
+    $self->more() ? $self->more()->size() + 1 : 1;
+}
+
+sub last {
+    my $self = shift;
+    $self->more() ? $self->more()->last() : $self;
+}
+
+sub leaf {
+    my $self = shift;
+    $self->parts() ? $self->parts()->leaf() : $self;
+}
+
+sub at {
+    my $self = shift;
+
+    return $self->_at3(@_) if 3 == @_;
+    return $self->_at2(@_) if 2 == @_;
+    return ( $_[0] == 0 || not defined( $self->more() ) )
+      ? $self
+      : $self->more()->at( $_[0] - 1 );
+}
+
+sub _at2 {
+    my $self = shift;
+    return $self->at( $_[0] )->parts()->at( $_[1] );
+}
+
+sub _at3 {
+    my $self = shift;
+    return $self->_at2( $_[0], $_[1] )->parts()->at( $_[2] );
+}
+
+sub text {
+    my $self = shift;
+    return $self->htmlToText( $self->body() );
+}
+
+sub htmlToText {
+    my $self = shift;
+    my $s    = shift;
+    return $s unless $s;
+    $s = $self->normalizeLineBreaks($s);
+    $s = $self->removeNonBreakTags($s);
+    $s = $self->condenseWhitespace($s);
+    $s = $self->unescape($s);
+    return $s;
+}
+
+sub removeNonBreakTags {
+    my $self = shift;
+    my $s    = shift;
+    $s =~ s/(<(?!br)[^>]+>)//g;
+    return $s;
+}
+
+sub unescape {
+    my $self = shift;
+    my $s    = shift;
+
+    $s =~ s|<br />|\n|g;
+    $s = $self->unescapeEntities($s);
+    $s = $self->unescapeSmartQuotes($s);
+
+    return $s;
+}
+
+sub unescapeSmartQuotes {
+    my $self = shift;
+    my $s    = shift;
+
+    $s =~ s/\x{91}/\'/g;
+    $s =~ s/\x{92}/\'/g;
+    $s =~ s/\x{93}/\"/g;
+    $s =~ s/\x{94}/\"/g;
+
+    $s =~ s/\x{201c}/\"/g;
+    $s =~ s/\x{201d}/\"/g;
+    $s =~ s/\x{2018}/\'/g;
+    $s =~ s/\x{2019}/\'/g;
+
+    return $s;
+}
+
+sub unescapeEntities {
+    my $self = shift;
+    my $s    = shift;
+    $s =~ s/\&lt;/</g;
+    $s =~ s/\&gt;/>/g;
+    $s =~ s/\&nbsp;/ /g;
+    $s =~ s/\&amp;/&/g;
+    $s =~ s/\&quot;/\"/g;
+    return $s;
+}
+
+sub normalizeLineBreaks {
+    my $self = shift;
+    my $s    = shift;
+    $s =~ s|<\s*br\s*/?\s*>|<br />|g;
+    $s =~ s|<\s*/\s*p\s*>\s*<\s*p( .*?)?>|<br />|g;
+    return $s;
+}
+
+sub unformat {
+    my $self = shift;
+    my $s    = shift;
+    $s =~ s/<[^>]+>//g;
+    return $s;
+}
+
+sub addToTag {
+    my $self = shift;
+    my ($string) = @_;
+    $self->{'tag'} =~ s/>$/$string>/;
+}
+
+sub addToBody {
+    my $self = shift;
+    my ($string) = @_;
     $self->{'body'} .= $string;
 }
 
-sub asString
-{
-	my $self = shift;
+sub asString {
+    my $self = shift;
 
-	my $s = $self->leader() . $self->tag();
-	if ( $self->parts() )
-	{
-		$s .= $self->parts()->asString();
-	}
-	else
-	{
-		$s .= $self->body();
-	}
-	$s .= $self->end();
-	if ( $self->more() )
-	{
-		$s .= $self->more()->asString();
-	}
-	else
-	{
-		$s .= $self->trailer();
-	}
-	return $s;
+    my $s = $self->leader() . $self->tag();
+    if ( $self->parts() ) {
+        $s .= $self->parts()->asString();
+    }
+    else {
+        $s .= $self->body();
+    }
+    $s .= $self->end();
+    if ( $self->more() ) {
+        $s .= $self->more()->asString();
+    }
+    else {
+        $s .= $self->trailer();
+    }
+    return $s;
 }
 
-
-sub leader
-{
-	$_[0]->{'leader'}
+sub leader {
+    $_[0]->{'leader'};
 }
 
-sub tag
-{
-	$_[0]->{'tag'}
+sub tag {
+    $_[0]->{'tag'};
 }
 
-sub body
-{
-	$_[0]->{'body'}
+sub body {
+    $_[0]->{'body'};
 }
 
-sub parts
-{
-	$_[0]->{'parts'}
+sub parts {
+    $_[0]->{'parts'};
 }
 
-sub end
-{
-	$_[0]->{'end'}
+sub end {
+    $_[0]->{'end'};
 }
 
-sub trailer 
-{
-	$_[0]->{'trailer'}
+sub trailer {
+    $_[0]->{'trailer'};
 }
 
-sub more
-{
-	my $self = shift;
-	$self->{'more'} = $_[0] if @_;
-	return $self->{'more'};
+sub more {
+    my $self = shift;
+    $self->{'more'} = $_[0] if @_;
+    return $self->{'more'};
 }
 
 # TBD print() is required by the tests. TJB
-sub print
-{
-	my $self = shift;
-	return $self->asString();
+sub print {
+    my $self = shift;
+    return $self->asString();
 }
 
-sub condenseWhitespace
-{
-	my $self = shift;
-	my $s = shift;
+sub condenseWhitespace {
+    my $self = shift;
+    my $s    = shift;
 
-	my $NON_BREAKING_SPACE = chr(160);
+    $s =~ s/\s+/ /g;
 
-	$s =~ s/\s+/ /g;
-	$s =~ s/&nbsp;/ /g;
-	$s =~ s/$NON_BREAKING_SPACE/ /g;
-	$s =~ s/^\s+//g;
-	$s =~ s/\s+$//g;
+ #
+ #   if a non-breaking-space character was inserted by a perl logic,
+ #   it might be represended either as a byte-sequence or as a single character.
+ #   (depending on the perl version)
+ #
+ #   the input document is exepected to be in a single-byte encoding, therefore
+ #   checks to both variants are done.
 
-	return $s;
+    my $NON_BREAKING_SPACE =
+      "\x{00a0}";    # internal representation: utf8 byte sequence
+    $s =~ s/$NON_BREAKING_SPACE/ /g;
+
+    $NON_BREAKING_SPACE = chr(160)
+      ;    # internal representation: single byte with numerical value of 160
+    $s =~ s/$NON_BREAKING_SPACE/ /g;
+
+    $s =~ s/&nbsp;/ /g;
+    $s =~ s/^\s+//g;
+    $s =~ s/\s+$//g;
+
+    return $s;
 }
 
-# TBD
+# TBD - not implemented yet. May be discarded in future releases
 sub footnote {
     return "[!]";
 }
 1;
-
 
 =pod
 

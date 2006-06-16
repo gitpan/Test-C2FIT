@@ -12,10 +12,9 @@ use strict;
 use Test::C2FIT::eg::music::MusicLibrary;
 use Test::C2FIT::eg::music::MusicPlayer;
 
-
 sub library {
     my $self = shift;
-    my($path) = @_;
+    my ($path) = @_;
 
     Test::C2FIT::eg::music::MusicLibrary->load($path);
 }
@@ -34,9 +33,10 @@ sub playing {
 
 sub select {
     my $self = shift;
-    my($index) = @_;
+    my ($index) = @_;
 
-    Test::C2FIT::eg::music::MusicLibrary::select($Test::C2FIT::eg::music::MusicLibrary::library[$index - 1]);
+    Test::C2FIT::eg::music::MusicLibrary::select(
+        $Test::C2FIT::eg::music::MusicLibrary::library[ $index - 1 ] );
 }
 
 sub title {
@@ -80,25 +80,29 @@ sub track {
 sub sameAlbum {
     my $self = shift;
 
-    Test::C2FIT::eg::music::MusicLibrary::findAlbum(Test::C2FIT::eg::music::MusicLibrary::looking()->album());
+    Test::C2FIT::eg::music::MusicLibrary::findAlbum(
+        Test::C2FIT::eg::music::MusicLibrary::looking()->album() );
 }
 
 sub sameArtist {
     my $self = shift;
 
-    Test::C2FIT::eg::music::MusicLibrary::findArtist(Test::C2FIT::eg::music::MusicLibrary::looking()->artist());
+    Test::C2FIT::eg::music::MusicLibrary::findArtist(
+        Test::C2FIT::eg::music::MusicLibrary::looking()->artist() );
 }
 
 sub sameGenre {
     my $self = shift;
 
-    Test::C2FIT::eg::music::MusicLibrary::findGenre(Test::C2FIT::eg::music::MusicLibrary::looking()->genre());
+    Test::C2FIT::eg::music::MusicLibrary::findGenre(
+        Test::C2FIT::eg::music::MusicLibrary::looking()->genre() );
 }
 
 sub sameYear {
     my $self = shift;
 
-    Test::C2FIT::eg::music::MusicLibrary::findYear(Test::C2FIT::eg::music::MusicLibrary::looking()->year());
+    Test::C2FIT::eg::music::MusicLibrary::findYear(
+        Test::C2FIT::eg::music::MusicLibrary::looking()->year() );
 }
 
 sub selectedSongs {
@@ -109,11 +113,11 @@ sub showAll {
     Test::C2FIT::eg::music::MusicLibrary::findAll();
 }
 
-
 # Play buttons
 
 sub play {
-    Test::C2FIT::eg::music::MusicPlayer::play(Test::C2FIT::eg::music::MusicLibrary::looking());
+    Test::C2FIT::eg::music::MusicPlayer::play(
+        Test::C2FIT::eg::music::MusicLibrary::looking() );
 }
 
 sub pause {

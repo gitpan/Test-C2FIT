@@ -13,71 +13,74 @@ use Test::C2FIT::eg::music::MusicPlayer;
 use Test::C2FIT::eg::music::Dialog;
 
 use vars qw($system $time
-            $nextSearchComplete $nextPlayStarted $nextPlayComplete);
+  $nextSearchComplete $nextPlayStarted $nextPlayComplete);
 
 $system = new Test::C2FIT::eg::music::Simulator();
-$time = time(); # 10000;		#HACK start with a fixed time()
+$time = time();    # 10000;		#HACK start with a fixed time()
 
 $nextSearchComplete = 0;
-$nextPlayStarted = 0;
-$nextPlayComplete = 0;
+$nextPlayStarted    = 0;
+$nextPlayComplete   = 0;
 
 sub new {
     my $pkg = shift;
 
-    return bless { @_ }, $pkg;
+    return bless {@_}, $pkg;
 }
 
 sub nextEvent {
     my $self = shift;
-    my($bound) = shift;
+    my ($bound) = shift;
 
     my $result = $bound;
-    $result = sooner($result, $nextSearchComplete);
-    $result = sooner($result, $nextPlayStarted);
-    $result = sooner($result, $nextPlayComplete);
+    $result = sooner( $result, $nextSearchComplete );
+    $result = sooner( $result, $nextPlayStarted );
+    $result = sooner( $result, $nextPlayComplete );
     return $result;
 }
 
 sub sooner {
-    my($soon, $event) = @_;
+    my ( $soon, $event ) = @_;
 
-    return ($event > $time && $event < $soon) ? $event : $soon;
+    return ( $event > $time && $event < $soon ) ? $event : $soon;
 }
 
 sub perform {
     my $self = shift;
 
-    Test::C2FIT::eg::music::MusicLibrary::searchComplete() if $time == $nextSearchComplete;
-    Test::C2FIT::eg::music::MusicPlayer::playStarted()     if $time == $nextPlayStarted;
-    Test::C2FIT::eg::music::MusicPlayer::playComplete()    if $time == $nextPlayComplete;
+    Test::C2FIT::eg::music::MusicLibrary::searchComplete()
+      if $time == $nextSearchComplete;
+    Test::C2FIT::eg::music::MusicPlayer::playStarted()
+      if $time == $nextPlayStarted;
+    Test::C2FIT::eg::music::MusicPlayer::playComplete()
+      if $time == $nextPlayComplete;
 }
 
 sub advance {
     my $self = shift;
-    my($future) = @_;
+    my ($future) = @_;
 
     #DEBUG print "advancing: $future ", (caller(1))[3], "\n";
 
     while ( $time < $future ) {
-	$time = $self->nextEvent($future);
-	$self->perform();
+        $time = $self->nextEvent($future);
+        $self->perform();
     }
 }
 
 sub schedule {
-	my $self = shift;
-    my($seconds) = @_;
-    return $time + ($self->_round($seconds));
+    my $self = shift;
+    my ($seconds) = @_;
+    return $time + ( $self->_round($seconds) );
 }
 
 sub delay {
     my $self = shift;
-    my($seconds) = @_;
+    my ($seconds) = @_;
 
     $seconds = $self->_round($seconds);
 
-    $self->advance($self->schedule($seconds));
+    $self->advance( $self->schedule($seconds) );
 }
 
 sub waitSearchComplete {
@@ -101,24 +104,25 @@ sub waitPlayComplete {
 sub failLoadJam {
     my $self = shift;
 
-    $Test::C2FIT::ActionFixture::actor = new Test::C2FIT::eg::music::Dialog("load jamed", $Test::C2FIT::ActionFixture::actor);
+    $Test::C2FIT::ActionFixture::actor =
+      new Test::C2FIT::eg::music::Dialog( "load jamed",
+        $Test::C2FIT::ActionFixture::actor );
 }
 
-sub _round
-{
-	my $self = shift;
-	my $seconds = shift;
+sub _round {
+    my $self    = shift;
+    my $seconds = shift;
 
-	return int($seconds + 0.5);
+    return int( $seconds + 0.5 );
 
-	my $roundDown = int($seconds);
+    my $roundDown = int($seconds);
 
-	my $fractionalPart = $seconds - $roundDown;
+    my $fractionalPart = $seconds - $roundDown;
 
     # warn "Seconds: $seconds, Down: $roundDown, Fract: $fractionalPart";
 
-	return 1;
-	return ($fractionalPart >= .5 ? $seconds + 1 : $seconds);
+    return 1;
+    return ( $fractionalPart >= .5 ? $seconds + 1 : $seconds );
 
 }
 

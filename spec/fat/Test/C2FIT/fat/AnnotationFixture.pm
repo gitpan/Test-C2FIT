@@ -10,76 +10,86 @@ use strict;
 
 use Test::C2FIT::Parse;
 
-sub ResultingHTML
-{
-	my $self = shift;
+sub ResultingHTML {
+    my $self = shift;
 
-	$self->{'Row'} = 0 unless $self->{'Row'};
-	$self->{'Column'} = 0 unless $self->{'Column'};
+    $self->{'Row'}    = 0 unless $self->{'Row'};
+    $self->{'Column'} = 0 unless $self->{'Column'};
 
-	my $table = new Test::C2FIT::Parse($self->{'OriginalHTML'});
-	my $row = $table->at(0, $self->{'Row'} - 1);
-	my $cell = $row->at(0, $self->{'Column'} - 1);
+    my $table = new Test::C2FIT::Parse( $self->{'OriginalHTML'} );
+    my $row   = $table->at( 0, $self->{'Row'} - 1 );
+    my $cell  = $row->at( 0, $self->{'Column'} - 1 );
 
-	$cell->{'body'} = $self->{'OverwriteCellBody'} if $self->{'OverwriteCellBody'};
-	$cell->addToBody($self->{'AddToCellBody'}) if $self->{'AddToCellBody'};
-	$cell->{'tag'} = $self->{'OverwriteCellTag'} if $self->{'OverwriteCellTag'};
-	$cell->{'end'} = $self->{'OverwriteEndCellTag'} if $self->{'OverwriteEndCellTag'};
-	$cell->addToTag($self->stripDelimiters($self->{'AddToCellTag'})) if $self->{'AddToCellTag'};
+    $cell->{'body'} = $self->{'OverwriteCellBody'}
+      if $self->{'OverwriteCellBody'};
+    $cell->addToBody( $self->{'AddToCellBody'} ) if $self->{'AddToCellBody'};
+    $cell->{'tag'} = $self->{'OverwriteCellTag'} if $self->{'OverwriteCellTag'};
+    $cell->{'end'} = $self->{'OverwriteEndCellTag'}
+      if $self->{'OverwriteEndCellTag'};
+    $cell->addToTag( $self->stripDelimiters( $self->{'AddToCellTag'} ) )
+      if $self->{'AddToCellTag'};
 
-	$row->{'tag'} = $self->{'OverwriteRowTag'} if $self->{'OverwriteRowTag'};
-	$row->{'end'} = $self->{'OverwriteEndRowTag'} if $self->{'OverwriteEndRowTag'};
-	$row->addToTag($self->stripDelimiters($self->{'AddToRowTag'})) if $self->{'AddToRowTag'};
+    $row->{'tag'} = $self->{'OverwriteRowTag'} if $self->{'OverwriteRowTag'};
+    $row->{'end'} = $self->{'OverwriteEndRowTag'}
+      if $self->{'OverwriteEndRowTag'};
+    $row->addToTag( $self->stripDelimiters( $self->{'AddToRowTag'} ) )
+      if $self->{'AddToRowTag'};
 
-	$table->{'tag'} = $self->{'OverwriteTableTag'} if $self->{'OverwriteTableTag'};
-	$table->{'end'} = $self->{'OverwriteEndTableTag'} if $self->{'OverwriteEndTableTag'};
-	$table->addToTag($self->stripDelimiters($self->{'AddToTableTag'})) if $self->{'AddToTableTag'};
+    $table->{'tag'} = $self->{'OverwriteTableTag'}
+      if $self->{'OverwriteTableTag'};
+    $table->{'end'} = $self->{'OverwriteEndTableTag'}
+      if $self->{'OverwriteEndTableTag'};
+    $table->addToTag( $self->stripDelimiters( $self->{'AddToTableTag'} ) )
+      if $self->{'AddToTableTag'};
 
-	$self->addParse($cell, $self->{'AddCellFollowing'}, ['td']) if $self->{'AddCellFollowing'};
-	$self->removeParse($cell) if $self->{'RemoveFollowingCell'};
-	
-	$self->addParse($row, $self->{'AddRowFollowing'}, ['tr','td']) if $self->{'AddRowFollowing'};
-	$self->removeParse($row) if $self->{'RemoveFollowingRow'};
+    $self->addParse( $cell, $self->{'AddCellFollowing'}, ['td'] )
+      if $self->{'AddCellFollowing'};
+    $self->removeParse($cell) if $self->{'RemoveFollowingCell'};
 
-	$self->addParse($table, $self->{'AddTableFollowing'}, ['table','tr','td']) if $self->{'AddTableFollowing'};
-		
-	return $self->GenerateOutput($table);
+    $self->addParse( $row, $self->{'AddRowFollowing'}, [ 'tr', 'td' ] )
+      if $self->{'AddRowFollowing'};
+    $self->removeParse($row) if $self->{'RemoveFollowingRow'};
+
+    $self->addParse(
+        $table,
+        $self->{'AddTableFollowing'},
+        [ 'table', 'tr', 'td' ]
+      )
+      if $self->{'AddTableFollowing'};
+
+    return $self->GenerateOutput($table);
 }
 
-sub addParse
-{
-	my $self = shift;
-	my ($parse, $newString, $tags) = @_;
-	my $newParse = new Test::C2FIT::Parse($newString, $tags);
-	$newParse->{'more'}		= $parse->more();
-	$newParse->{'trailer'}	= $parse->trailer();
-	$parse->{'more'} = $newParse;
-	$parse->{'trailer'} = undef;
+sub addParse {
+    my $self = shift;
+    my ( $parse, $newString, $tags ) = @_;
+    my $newParse = new Test::C2FIT::Parse( $newString, $tags );
+    $newParse->{'more'}    = $parse->more();
+    $newParse->{'trailer'} = $parse->trailer();
+    $parse->{'more'}       = $newParse;
+    $parse->{'trailer'}    = undef;
 }
 
-sub removeParse
-{
-	my $self = shift;
-	my $parse = shift;
-	$parse->{'trailer'}	= $parse->more()->trailer();
-	$parse->{'more'}	= $parse->more()->more();
+sub removeParse {
+    my $self  = shift;
+    my $parse = shift;
+    $parse->{'trailer'} = $parse->more()->trailer();
+    $parse->{'more'}    = $parse->more()->more();
 }
 
-sub stripDelimiters
-{
-	my $self = shift;
-	my $s = shift;
-	$s =~ s/^\[//g;
-	$s =~ s/]$//g;
-	return $s;
-}	
+sub stripDelimiters {
+    my $self = shift;
+    my $s    = shift;
+    $s =~ s/^\[//g;
+    $s =~ s/]$//g;
+    return $s;
+}
 
-# code smell note: copied from DocumentParseFixture	
-sub GenerateOutput
-{
-	my $self = shift;
-	my $parse = shift;
-	return $parse->asString();
+# code smell note: copied from DocumentParseFixture
+sub GenerateOutput {
+    my $self  = shift;
+    my $parse = shift;
+    return $parse->asString();
 }
 
 1;
