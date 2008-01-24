@@ -10,7 +10,7 @@ use Getopt::Std;
 use strict;
 use warnings;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 sub file_runner {
     my $param = {};

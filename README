@@ -1,4 +1,4 @@
-Test-C2FIT version 0.01
+Test-C2FIT version 0.08
 =======================
 
 Test::C2FIT is a direct Perl port of Ward Cunningham's FIT 
@@ -68,10 +68,11 @@ AUTHOR
 Original port from the Java version by Dave W. Smith
 Updates and modifications by Tony Byrne <fit4perl@byrnehq.com>
 Newer Updates and modification by Martin Busik <martin.busik@busik.de>
+Bug Fixes and suggestions submitted by Christophe Hermier
 
 COPYRIGHT AND LICENSE
 
-Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
+Copyright (c) 2002-2008 Cunningham & Cunningham, Inc.
 Released under the terms of the GNU General Public License version 2 or later.
 
 INSTALLATION

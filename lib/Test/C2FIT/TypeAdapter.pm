@@ -1,4 +1,4 @@
-# $Id: TypeAdapter.pm,v 1.6 2006/06/16 15:20:56 tonyb Exp $
+# $Id: TypeAdapter.pm,v 1.7 2008/01/24 14:28:26 tonyb Exp $
 #
 # Copyright (c) 2002-2005 Cunningham & Cunningham, Inc.
 # Released under the terms of the GNU General Public License version 2 or later.
@@ -224,22 +224,31 @@ sub equals {
 }
 
 sub _isnumber {
-    local $_;
-    my $self = shift;
-    $_ = shift;
-
-    return 0 unless /^-?[\.\de\/]+/i;
-
-    #    return 0 unless /[0-9]/;
-    return 0 if tr/\./\./ > 1;    # 1.0 is a number
-    return 0 if tr/e/e/ > 1;      # 0e0 is a number
-    return 0 if tr/\//\// > 1;    # 1/2 is a number
-    return 1;
-
-    # return 1 if $s =~ m/^-?\.\d+$/;
-    # return 1 if $s =~ m/^-?\d+(:?\.\d+)?$/;
-    # return 0;
+	my ($self, $test) = @_;
+	
+	# Handle fractions.
+	if ($test =~ /\//)
+	{
+		my ($a, $b) = split /\//, $test;
+		return $self->_isnumber($a) && $self->_isnumber($b);
+	}
+	
+	defined scalar $self->_getnum($test);
 }
+
+sub _getnum {
+    use POSIX qw(strtod);
+    my ($self, $str) = @_;
+    $str =~ s/^\s+//;
+    $str =~ s/\s+$//;
+    $! = 0;
+    my($num, $unparsed) = strtod($str);
+    if (($str eq '') || ($unparsed != 0) || $!) {
+        return;
+    } else {
+        return $num;
+    } 
+} 
 
 sub toString {
     my $self = shift;

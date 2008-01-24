@@ -2,6 +2,7 @@ bin/FileRunner.pl
 bin/WikiRunner.pl
 Changes
 examples-perl/all.fscr
+examples-perl/GNUmakefile
 examples-perl/input/filter-example.html
 examples-perl/input/parse-problem.html
 examples-perl/lib/FilteredData.pm
@@ -13,6 +14,7 @@ examples-perl/README.TXT
 examples-perl/run_tests.bat
 examples-perl/run_tests.sh
 examples/all.fscr
+examples/GNUmakefile
 examples/input/AllCombinations.html
 examples/input/AllFiles.html
 examples/input/AllPairs.html
@@ -99,6 +101,7 @@ META.yml
 perltidy.conf
 perltidy_glob.BAT
 README
+ReleaseNotes
 run_tests.pl
 spec/all.fscr
 spec/fat/Test/C2FIT/fat/AnnotationFixture.pm
@@ -112,6 +115,7 @@ spec/fat/Test/C2FIT/fat/ReferenceFixture.pm
 spec/fat/Test/C2FIT/fat/StandardAnnotationFixture.pm
 spec/fat/Test/C2FIT/fat/TableParseFixture.pm
 spec/fat/Test/C2FIT/fat/TextToHtmlFixture.pm
+spec/GNUmakefile
 spec/input/annotation.html
 spec/input/extensions.html
 spec/input/fixtures.html
@@ -132,3 +136,4 @@ t/all_tests.t
 t/lib/Test/C2FIT/test/AllTests.pm
 t/lib/Test/C2FIT/test/FixtureTest.pm
 t/lib/Test/C2FIT/test/ParseTest.pm
+t/lib/Test/C2FIT/test/TypeAdapterTest.pm

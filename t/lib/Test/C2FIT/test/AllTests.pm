@@ -6,6 +6,7 @@ use strict;
 my @TESTS =qw(
 	ParseTest
 	FixtureTest
+	TypeAdapterTest
 );
 
 #===============================================================================================
